@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Precise 1528x688</title>
+    <title>FC26 Scoreboard - Photoshop Optimized</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -24,30 +24,30 @@
             width: 1528px;
             height: 688px;
             background: url('bp.png') no-repeat center center;
-            background-size: 1528px 688px; /* Görsel boyutuna tam kilitli */
+            background-size: 1528px 688px;
         }
 
         .score { 
             position: absolute;
-            font-size: 110px; /* 688px yüksekliğe göre optimize edildi */
+            font-size: 115px; 
             color: #ffffff;
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.8), 4px 4px 10px rgba(0,0,0,1);
-            width: 280px;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.8), 4px 4px 12px rgba(0,0,0,1);
+            width: 300px;
             text-align: center;
             font-weight: 700;
-            top: 45%; /* Dikeyde kutu merkezine hiza */
+            top: 44.5%; /* Kutuların dikey merkez hizası */
             transform: translateY(-50%);
         }
 
-        /* --- 1528x688 NOKTA ATIŞI HİZALAMA --- */
+        /* --- 1528x688 MİLİMETRİK HİZALAMA --- */
         
         #wins { 
-            left: 175px;  /* Sol kutunun tam göbeği */
+            left: 172px;  /* Sol altın çerçevenin tam ortası */
         }
 
         #losses { 
-            right: 175px; /* Sağ kutunun tam göbeği */
+            right: 172px; /* Sağ altın çerçevenin tam ortası */
         }
 
         /* -------------------------------------- */
@@ -57,9 +57,10 @@
             background: #0a0a0c; z-index: 999; flex-direction: column; 
             align-items: center; justify-content: center; gap: 30px; 
         }
-        .btn { width: 350px; padding: 30px; font-size: 32px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; }
+        .btn { width: 380px; padding: 30px; font-size: 32px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Orbitron'; font-weight: bold; transition: 0.1s; }
         .btn-w { background: linear-gradient(135deg, #2ecc71, #27ae60); }
         .btn-l { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -72,10 +73,10 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; font-family: 'Orbitron'; font-size: 40px; margin-bottom: 10px;">FC26 CONTROL</h1>
+    <h1 style="color: gold; font-family: 'Orbitron'; font-size: 45px; margin-bottom: 20px;">FC26 ADMIN</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">WIN +1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">LOSS +1</button>
-    <div onclick="res()" style="color: #333; cursor: pointer; margin-top: 40px;">[ RESET DATA ]</div>
+    <div onclick="res()" style="color: #444; cursor: pointer; margin-top: 40px; font-size: 14px;">[ RESET DATA ]</div>
 </div>
 
 <script>
