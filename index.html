@@ -18,12 +18,12 @@
         /* GENEL RAKAM STİLİ */
         .score-num {
             position: absolute;
-            width: 155px;         /* Kutuyu kaplaması için genişletildi */
+            width: 155px;         
             height: 148px;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 135px;      /* 140px çok büyüktü, 85px ideal ve heybetli durur */
+            font-size: 135px;      
             color: #FFD700;
             text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
             font-weight: 900;
@@ -104,7 +104,8 @@
         };
 
         window.resetScores = () => {
-            if(confirm("Sıfırla?")) set(scoreRef, { evSahibi: "WIN", deplasman: "LOSE", evSkor: 0, depSkor: 0 });
+            // Direkt sıfırlama
+            set(scoreRef, { evSahibi: "WIN", deplasman: "LOSE", evSkor: 0, depSkor: 0 });
         };
     </script>
 </body>
