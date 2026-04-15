@@ -2,14 +2,14 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - 1080p Edition</title>
+    <title>FC26 Scoreboard - 1080p PNG24 Optimized</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* 1920x1080 tam ekran yerleşimi */
+        /* 1080p Tuval Yapısı */
         body { 
             background: transparent; 
             overflow: hidden; 
@@ -25,44 +25,45 @@
             width: 1920px;
             height: 1080px;
             background: url('bp.png') no-repeat center center;
-            background-size: contain; /* 1080p olduğu için tam oturacak */
+            background-size: 1920px 1080px; /* Görseli tam ölçekte kilitler */
         }
 
         .score { 
             position: absolute;
-            font-size: 110px; /* 1080p'de daha okunaklı olması için biraz büyütüldü */
+            font-size: 115px; /* 1080p'de daha görkemli durması için artırıldı */
             color: #ffffff;
             font-family: 'Orbitron', sans-serif;
             text-shadow: 0 0 20px rgba(212, 175, 55, 0.8), 4px 4px 10px rgba(0,0,0,0.9);
-            width: 200px;
+            width: 250px; /* Rakamın genişlik alanı */
             text-align: center;
+            font-weight: 700;
         }
 
-        /* --- 1080p MİLİMETRİK KOORDİNATLAR --- */
+        /* --- 1920x1080 KESİN KOORDİNATLAR --- */
         
         #wins { 
-            /* Sol kutunun tam ortası için tahmini değer, gerekirse 1-2 piksel oynat */
-            left: 565px;  
-            top: 455px;   
+            /* Sol kutunun merkezi */
+            left: 542px;  
+            top: 452px;   
         }
 
         #losses { 
-            /* Sağ kutunun tam ortası için tahmini değer */
-            right: 565px; 
-            top: 455px;   
+            /* Sağ kutunun merkezi */
+            right: 542px; 
+            top: 452px;   
         }
 
         /* -------------------------------------- */
 
         #adminUI { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(10, 10, 12, 0.95); z-index: 999; flex-direction: column; 
+            background: rgba(10, 10, 12, 0.98); z-index: 999; flex-direction: column; 
             align-items: center; justify-content: center; gap: 30px; 
         }
-        .btn { width: 350px; padding: 30px; font-size: 32px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Orbitron'; font-weight: bold; transition: 0.3s; }
-        .btn-w { background: linear-gradient(135deg, #27ae60, #2ecc71); box-shadow: 0 5px 20px rgba(46, 204, 113, 0.4); }
-        .btn-l { background: linear-gradient(135deg, #c0392b, #e74c3c); box-shadow: 0 5px 20px rgba(231, 76, 60, 0.4); }
-        .btn:hover { transform: scale(1.05); }
+        .btn { width: 400px; padding: 35px; font-size: 36px; cursor: pointer; border-radius: 20px; border: none; color: white; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; }
+        .btn-w { background: linear-gradient(135deg, #2ecc71, #27ae60); box-shadow: 0 10px 30px rgba(46, 204, 113, 0.3); }
+        .btn-l { background: linear-gradient(135deg, #e74c3c, #c0392b); box-shadow: 0 10px 30px rgba(231, 76, 60, 0.3); }
+        .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -75,31 +76,32 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; font-family: 'Orbitron'; font-size: 48px; margin-bottom: 20px;">FC26 CONTROL CENTER</h1>
+    <h1 style="color: gold; font-family: 'Orbitron'; font-size: 50px; margin-bottom: 20px; text-shadow: 0 0 15px gold;">FC26 ELITE CONTROL</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">WIN +1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">LOSS +1</button>
-    <div onclick="res()" style="color: #666; cursor: pointer; margin-top: 40px; font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">Reset All Scores</div>
+    <div onclick="res()" style="color: #444; cursor: pointer; margin-top: 50px; font-size: 16px; letter-spacing: 3px;">[ RESET DATA ]</div>
 </div>
 
 <script>
+    // Firebase Config (Öncekiyle aynı)
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const scoreRef = db.ref('skorlar');
 
-    scoreRef.on('value', (snapshot) => {
-        const data = snapshot.val() || { wins: 0, losses: 0 };
-        document.getElementById('wins').innerText = data.wins || 0;
-        document.getElementById('losses').innerText = data.losses || 0;
+    scoreRef.on('value', (s) => {
+        const d = s.val() || { wins: 0, losses: 0 };
+        document.getElementById('wins').innerText = d.wins || 0;
+        document.getElementById('losses').innerText = d.losses || 0;
     });
 
-    function update(type, val) { scoreRef.child(type).transaction(current => (current || 0) + val); }
-    function res() { if(confirm('Tüm skorlar sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 }); }
+    function update(t, v) { scoreRef.child(t).transaction(c => (c || 0) + v); }
+    function res() { if(confirm('Sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 }); }
 
     if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlay').style.display = 'none';
-        document.body.style.background = "#0a0a0c"; // Admin paneli okunurluğu için
+        document.body.style.background = "#0a0a0c";
     }
 </script>
 </body>
