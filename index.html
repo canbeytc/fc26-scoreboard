@@ -2,56 +2,51 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Fix</title>
+    <title>FC26 Scoreboard - PRO</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background: transparent; 
-            font-family: 'Anton', sans-serif; 
-            overflow: hidden; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; }
 
+        /* TABELA GÖRÜNÜMÜ */
+        #overlayUI { 
+            display: flex; justify-content: center; align-items: center; height: 100vh; 
+        }
         .container {
             position: relative;
-            width: 1000px;
-            height: 450px;
-            /* UZANTI .png OLARAK GÜNCELLENDİ */
-            background: url('bp.png') no-repeat center center;
+            width: 800px;
+            height: 300px;
+            background: url('./bp.png') no-repeat center center;
             background-size: contain;
         }
-
         .score { 
             position: absolute;
-            top: 50%;
+            top: 48%;
             transform: translateY(-50%);
-            font-size: 130px; 
+            font-size: 110px; 
             color: #ffffff;
-            text-shadow: 0 0 20px rgba(255, 174, 0, 0.7), 4px 4px 10px rgba(0,0,0,0.8);
-            width: 180px;
+            text-shadow: 0 0 15px rgba(255, 160, 0, 0.8), 3px 3px 5px #000;
+            width: 140px;
             text-align: center;
         }
+        #wins { left: 100px; }
+        #losses { right: 100px; }
 
-        /* Sayıları tam kutuların içine oturtmak için milimetrik ayarlar */
-        #wins { 
-            left: 105px; 
+        /* ADMIN PANELİ GÖRÜNÜMÜ */
+        #adminUI { 
+            display: none; flex-direction: column; align-items: center; justify-content: center; 
+            min-height: 100vh; background: #111; gap: 20px; color: white;
         }
-
-        #losses { 
-            right: 105px; 
+        .btn { 
+            width: 280px; padding: 20px; font-size: 24px; cursor: pointer; 
+            border-radius: 12px; border: none; font-family: 'Anton'; color: white;
+            box-shadow: 0 4px 0 #000;
         }
-
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 20px; }
-        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; box-shadow: 0 5px 0 #000;}
         .btn-w { background: #d4af37; }
         .btn-l { background: #c0392b; }
-        .btn:active { transform: translateY(3px); box-shadow: none; }
+        .btn:active { transform: translateY(2px); box-shadow: none; }
     </style>
 </head>
 <body>
@@ -64,36 +59,43 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; margin-bottom: 20px;">FC26 ADMIN</h1>
-    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="res()" style="color: #444; background: none; border: none; margin-top: 30px; cursor: pointer;">Sıfırla</button>
+    <h1 style="color: gold;">FC26 ADMIN PANEL</h1>
+    <button class="btn btn-w" onclick="updateScore('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-l" onclick="updateScore('losses', 1)">MAĞLUBİYET +1</button>
+    <button onclick="resetScores()" style="margin-top:20px; background:none; border:1px solid #333; color:#555; padding:5px 15px; cursor:pointer;">Skorları Sıfırla</button>
 </div>
 
 <script>
+    // Firebase Bağlantısı
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const DB_PATH = 'fc26_data'; 
+    const DB_REF = db.ref('fc26_data');
 
-    db.ref(DB_PATH).on('value', (s) => {
-        const d = s.val() || { wins: 0, losses: 0 };
-        document.getElementById('wins').innerText = d.wins;
-        document.getElementById('losses').innerText = d.losses;
+    // Verileri Dinle
+    DB_REF.on('value', (snapshot) => {
+        const data = snapshot.val() || { wins: 0, losses: 0 };
+        document.getElementById('wins').innerText = data.wins;
+        document.getElementById('losses').innerText = data.losses;
     });
 
-    function update(field, val) {
-        db.ref(DB_PATH + '/' + field).transaction(current => (current || 0) + val);
+    // Skor Güncelleme Fonksiyonu
+    function updateScore(type, val) {
+        DB_REF.child(type).transaction((current) => (current || 0) + val)
+        .then(() => console.log("Başarıyla güncellendi"))
+        .catch((err) => alert("Hata: " + err.message));
     }
 
-    function res() {
-        if(confirm('Sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+    function resetScores() {
+        if(confirm('Emin misin?')) DB_REF.set({ wins: 0, losses: 0 });
     }
 
-    if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
+    // URL'de ?mode=admin varsa paneli göster
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#0a0a0a";
+        document.body.style.background = "#111";
     }
 </script>
 </body>
