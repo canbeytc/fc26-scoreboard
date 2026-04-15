@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard Final</title>
+    <title>FC26 Scoreboard - Pro Version</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -15,13 +15,14 @@
         .board { 
             position: relative;
             width: 800px;
-            height: 250px;
-            /* ÖNBELLEK KIRICI: Sonuna ?v=1 ekleyerek tarayıcıyı tazelemeye zorluyoruz */
-            background: url('./bp.png?v=1') no-repeat center center;
+            height: 300px;
+            background: url('./bp.png') no-repeat center center;
             background-size: contain;
             display: flex;
             align-items: center;
             justify-content: center;
+            /* Arka plandaki damalı deseni yok etmek için (geçici çözüm) */
+            mix-blend-mode: multiply; 
         }
 
         .score-container {
@@ -29,22 +30,22 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            padding: 0 115px;
-            margin-top: 15px;
+            /* Sayıları kalkanın tam üzerine oturtmak için ayarlar */
+            padding: 0 120px;
+            margin-top: 10px;
         }
 
         .score { 
-            font-size: 110px; 
+            font-size: 115px; 
             color: white;
-            text-shadow: 4px 4px 15px rgba(0,0,0,1);
+            text-shadow: 2px 4px 10px rgba(0,0,0,0.9);
             width: 130px;
             text-align: center;
             line-height: 1;
         }
 
-        .spacer { width: 140px; }
+        .spacer { width: 160px; } /* Kalkanın üzerini tam boş bırakmak için */
 
-        /* Admin UI */
         #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; gap: 20px; }
         .btn { width: 300px; padding: 20px; font-size: 25px; cursor: pointer; border-radius: 10px; border: none; color: white; font-family: 'Anton'; }
         .btn-w { background: green; }
@@ -67,7 +68,6 @@
     <h1 style="color: gold;">FC26 CONTROL</h1>
     <button class="btn btn-w" onclick="up('wins', 1)">WINS +1</button>
     <button class="btn btn-l" onclick="up('losses', 1)">LOSS +1</button>
-    <button onclick="res()" style="color:gray; background:none; border:none; margin-top:20px; cursor:pointer;">Sıfırla</button>
 </div>
 
 <script>
@@ -82,7 +82,6 @@
     });
 
     function up(f, v) { db.ref('fc26_stats/' + f).transaction(c => (c || 0) + v); }
-    function res() { if(confirm('Sıfırlansın mı?')) db.ref('fc26_stats').set({ wins: 0, losses: 0 }); }
 
     if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
