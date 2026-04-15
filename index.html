@@ -1,32 +1,102 @@
-bp.png
-bp.png
-Dosya Boyutu: 988.1 KB
-Boyutlar: 1528x688px
-Dosya Bilgileri
-Dosya Boyutu	1.011.841 Bytes / 988.1KB / 0.96MB
-Dosya Türü	PNG
-Dosya Türü Uzantısı	PNG
-Resim Özellikleri
-En Boy Oranı	191 / 86
-Resim Genişliği	1528
-Resim Yüksekliği	688
-BitDepth	8
-Sıkıştırma	0
-Format	image/png
-Tarih ve Saat
-Dosya Değiştirme Tarihi	0000:00:00 00:00:00
-Oluşturma Tarihi	2026:04:15 19:33:23+03:00
-Değiştirme Tarihi	2026:04:15 21:10:33+03:00
-MetadataDate	2026:04:15 21:10:33+03:00
-Yazılım ve İşleme
-Yazılım	Adobe ImageReady
-CreatorTool	Adobe Photoshop 27.5 (Windows)
-Diğer Veriler
-MIME Türü	image/png
-ColorType	6
-Filter	0
-Interlace	0
-InstanceID	xmp.iid:6564A6CB38F611F1BF7E944653FDC337
-DocumentID	xmp.did:6564A6CC38F611F1BF7E944653FDC337
-Resim Boyutu	1528 688
-Megapiksel	1.051264
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>FC26 Scoreboard - Precise 1528x688</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            background: transparent; 
+            overflow: hidden; 
+            width: 1528px; 
+            height: 688px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+        }
+
+        .scoreboard-container {
+            position: relative;
+            width: 1528px;
+            height: 688px;
+            background: url('bp.png') no-repeat center center;
+            background-size: 1528px 688px; /* Görsel boyutuna tam kilitli */
+        }
+
+        .score { 
+            position: absolute;
+            font-size: 110px; /* 688px yüksekliğe göre optimize edildi */
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.8), 4px 4px 10px rgba(0,0,0,1);
+            width: 280px;
+            text-align: center;
+            font-weight: 700;
+            top: 45%; /* Dikeyde kutu merkezine hiza */
+            transform: translateY(-50%);
+        }
+
+        /* --- 1528x688 NOKTA ATIŞI HİZALAMA --- */
+        
+        #wins { 
+            left: 175px;  /* Sol kutunun tam göbeği */
+        }
+
+        #losses { 
+            right: 175px; /* Sağ kutunun tam göbeği */
+        }
+
+        /* -------------------------------------- */
+
+        #adminUI { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #0a0a0c; z-index: 999; flex-direction: column; 
+            align-items: center; justify-content: center; gap: 30px; 
+        }
+        .btn { width: 350px; padding: 30px; font-size: 32px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Orbitron'; font-weight: bold; transition: 0.2s; }
+        .btn-w { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .btn-l { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    </style>
+</head>
+<body>
+
+<div id="overlay">
+    <div class="scoreboard-container">
+        <span class="score" id="wins">0</span>
+        <span class="score" id="losses">0</span>
+    </div>
+</div>
+
+<div id="adminUI">
+    <h1 style="color: gold; font-family: 'Orbitron'; font-size: 40px; margin-bottom: 10px;">FC26 CONTROL</h1>
+    <button class="btn btn-w" onclick="update('wins', 1)">WIN +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">LOSS +1</button>
+    <div onclick="res()" style="color: #333; cursor: pointer; margin-top: 40px;">[ RESET DATA ]</div>
+</div>
+
+<script>
+    const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const scoreRef = db.ref('skorlar');
+
+    scoreRef.on('value', (s) => {
+        const d = s.val() || { wins: 0, losses: 0 };
+        document.getElementById('wins').innerText = d.wins || 0;
+        document.getElementById('losses').innerText = d.losses || 0;
+    });
+
+    function update(t, v) { scoreRef.child(t).transaction(c => (c || 0) + v); }
+    function res() { if(confirm('Sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 }); }
+
+    if (window.location.search.includes('mode=admin')) {
+        document.getElementById('adminUI').style.display = 'flex';
+        document.getElementById('overlay').style.display = 'none';
+    }
+</script>
+</body>
+</html>
