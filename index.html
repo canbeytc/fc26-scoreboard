@@ -8,60 +8,59 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; }
+        body { 
+            background: transparent; 
+            font-family: 'Anton', sans-serif; 
+            overflow: hidden; 
+        }
 
-        #overlayUI { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #overlayUI { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+        }
 
         .board { 
             position: relative;
-            width: 800px;
-            height: 300px;
-            /* Dosya adının tam olarak bp.png olduğunu varsayıyoruz */
-            background: url('./bp.png?v=99') no-repeat center center;
+            width: 900px; /* Görsel boyutuna göre optimize edildi */
+            height: 400px;
+            /* Dosya adın bp.jpg olduğu için tam bu ismi kullanıyoruz */
+            background: url('./bp.jpg?v=10') no-repeat center center;
             background-size: contain;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
+        /* Sayıları tam o siyah karelerin içine hizalar */
         .score-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            padding: 0 120px;
-            margin-top: 15px; /* Sayıları kalkanın içine milimetrik oturtur */
+            padding: 0 105px; /* Sayıları yatayda tam boşluklara iter */
+            margin-top: 10px; /* Dikeyde ortalar */
         }
 
         .score { 
-            font-size: 115px; 
-            color: white;
-            text-shadow: 4px 4px 12px rgba(0,0,0,1);
-            width: 130px;
+            font-size: 130px; /* Sayılar artık çok daha büyük */
+            color: #ffffff;
+            /* Altın/Bronz tema ile uyumlu hafif bir parlama */
+            text-shadow: 0 0 20px rgba(255, 174, 0, 0.8), 4px 4px 10px rgba(0,0,0,0.5);
+            width: 150px;
             text-align: center;
             line-height: 1;
         }
 
-        .spacer { width: 160px; }
+        .spacer { width: 220px; } /* Ortadaki FC26 logosunu boş bırakır */
 
-        /* ADMIN PANELİ (Sadece mode=admin ile görünür) */
-        #adminUI { 
-            display: none; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            background: #0a0a0a; 
-            gap: 20px; 
-        }
-        .btn { 
-            width: 350px; padding: 25px; font-size: 30px; 
-            cursor: pointer; border-radius: 15px; border: none; 
-            color: white; font-family: 'Anton'; text-transform: uppercase;
-        }
-        .btn-w { background: linear-gradient(#2ecc71, #27ae60); }
-        .btn-l { background: linear-gradient(#e74c3c, #c0392b); }
-        .btn:active { transform: scale(0.98); }
+        /* ADMIN PANELİ STİLLERİ */
+        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0f0f0f; gap: 20px; }
+        .btn { width: 320px; padding: 25px; font-size: 35px; cursor: pointer; border-radius: 20px; border: none; color: white; font-family: 'Anton'; text-transform: uppercase; box-shadow: 0 6px 0 #000; transition: 0.1s; }
+        .btn-w { background: linear-gradient(180deg, #d4af37, #aa8a2e); } /* Altın rengi galibiyet */
+        .btn-l { background: linear-gradient(180deg, #c0392b, #962d22); } /* Kırmızı mağlubiyet */
+        .btn:active { transform: translateY(4px); box-shadow: none; }
     </style>
 </head>
 <body>
@@ -77,10 +76,10 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; margin-bottom: 20px;">FC26 SCORE CONTROL</h1>
-    <button class="btn btn-w" onclick="send('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-l" onclick="send('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="reset()" style="margin-top:30px; background:none; border:1px solid #333; color:#444; cursor:pointer; padding:5px;">Sıfırla</button>
+    <h1 style="color: #d4af37; margin-bottom: 20px; font-size: 40px;">FC26 PANEL</h1>
+    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
+    <button onclick="res()" style="background:none; border:1px solid #444; color:#666; cursor:pointer; padding:10px; margin-top:30px; border-radius:10px;">Skorları Sıfırla</button>
 </div>
 
 <script>
@@ -88,30 +87,31 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // Veritabanı yolu (Hem admin hem tabela burayı kullanacak)
-    const REF_PATH = 'fc26_stats_live'; 
+    const DB_PATH = 'fc26_data'; 
 
     // CANLI VERİ OKUMA
-    db.ref(REF_PATH).on('value', (s) => {
+    db.ref(DB_PATH).on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wins').innerText = d.wins;
         document.getElementById('losses').innerText = d.losses;
     });
 
-    // VERİ GÖNDERME (Butonlar)
-    function send(field, val) {
-        db.ref(REF_PATH + '/' + field).transaction(c => (c || 0) + val);
+    // VERİ GÜNCELLEME
+    function update(field, val) {
+        db.ref(DB_PATH + '/' + field).transaction(current => (current || 0) + val);
     }
 
-    function reset() {
-        if(confirm('Sıfırlansın mı?')) db.ref(REF_PATH).set({ wins: 0, losses: 0 });
+    function res() {
+        if(confirm('Skorlar sıfırlansın mı?')) {
+            db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+        }
     }
 
-    // GİRİŞ MODU KONTROLÜ
-    if (window.location.search.includes('mode=admin')) {
+    // MOD KONTROLÜ
+    if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#0a0a0a";
+        document.body.style.background = "#0f0f0f";
     }
 </script>
 </body>
