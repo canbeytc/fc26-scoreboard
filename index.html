@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - 1080p Ultra</title>
+    <title>FC26 Scoreboard - Final Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -24,12 +24,12 @@
             width: 1920px;
             height: 1080px;
             background: url('bp.png') no-repeat center center;
-            background-size: 1920px 1080px;
+            background-size: contain;
         }
 
         .score { 
             position: absolute;
-            font-size: 130px; /* 1080p kutularına uygun büyük font */
+            font-size: 130px; /* Kutulara uygun büyük font */
             color: #ffffff;
             font-family: 'Orbitron', sans-serif;
             text-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 5px 5px 15px rgba(0,0,0,1);
@@ -38,16 +38,16 @@
             font-weight: 700;
         }
 
-        /* --- 1080p TAM MERKEZ KOORDİNATLARI --- */
+        /* --- 1080p MİLİMETRİK HİZALAMA --- */
         
         #wins { 
-            /* Sol kutunun tam ortasına çekildi */
+            /* Sol kutunun tam ortası */
             left: 335px;  
             top: 445px;   
         }
 
         #losses { 
-            /* Sağ kutunun tam ortasına çekildi */
+            /* Sağ kutunun tam ortası */
             right: 335px; 
             top: 445px;   
         }
