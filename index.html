@@ -2,77 +2,76 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Milimetrik Fix</title>
+    <title>FC26 Scoreboard - Pro Final</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        :root {
-            --gold-glow: rgba(212, 175, 55, 0.5);
-            --bg-dark: #0a0a0c;
-        }
-
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-        /* TABELA ANA KONTEYNER */
-        .container {
+        /* ANA TABELA ALANI */
+        .scoreboard-wrapper {
             position: relative;
-            width: 1000px; /* Görselin genişliği */
-            height: 450px; /* Görselin yüksekliği */
+            width: 1000px;
+            height: 450px;
             background: url('bp.png') no-repeat center center;
             background-size: contain;
+            display: flex;
+            justify-content: space-between; /* Sol ve sağ kutuyu iki uca iter */
+            align-items: center;
+            padding: 0 75px; /* Kenarlardan içe doğru pay bırakır */
+        }
+
+        /* SKOR KUTULARI (GÖRÜNMEZ ÇERÇEVE) */
+        .score-box {
+            width: 200px; /* Kutuların genişliğini buradan ayarla */
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: -10px; /* Kutuları hafif yukarı/aşağı taşır */
         }
 
         .score { 
-            position: absolute;
-            top: 221px; /* DİKEY AYAR: Sayıları yukarı/aşağı taşımak için burayı değiştir */
-            transform: translateY(-50%);
-            font-size: 110px; 
+            font-size: 115px; 
             color: #ffffff;
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 15px var(--gold-glow), 4px 4px 5px rgba(0,0,0,0.9);
-            width: 160px; /* Sayı kutusunun genişliği */
-            text-align: center;
-        }
-
-        /* SOL SKOR (GALİBİYET) KONUMU */
-        #wins { 
-            left: 118px; /* YATAY AYAR: Sol sayıyı sağa/sola taşımak için burayı değiştir */
-        }
-
-        /* SAĞ SKOR (MAĞLUBİYET) KONUMU */
-        #losses { 
-            right: 118px; /* YATAY AYAR: Sağ sayıyı sağa/sola taşımak için burayı değiştir */
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.6), 4px 4px 10px rgba(0,0,0,0.9);
+            letter-spacing: -5px;
         }
 
         /* ADMIN PANELİ */
         #adminUI { 
             display: none; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; width: 100vw; background: var(--bg-dark); gap: 25px; 
+            height: 100vh; width: 100vw; background: #0a0a0c; gap: 20px; 
             position: fixed; top: 0; left: 0; z-index: 999;
-            background: radial-gradient(circle, #1a1a1f 0%, #050505 100%);
         }
-        .btn { width: 340px; padding: 22px; font-size: 26px; cursor: pointer; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); color: white; font-family: 'Orbitron', sans-serif; transition: 0.2s; text-transform: uppercase; }
-        .btn-w { background: linear-gradient(145deg, #1d3521, #27ae60); }
-        .btn-l { background: linear-gradient(145deg, #441a1a, #c0392b); }
+        .btn { width: 320px; padding: 25px; font-size: 28px; cursor: pointer; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); color: white; font-family: 'Orbitron'; transition: 0.2s; }
+        .btn-w { background: linear-gradient(145deg, #1d3521, #2ecc71); }
+        .btn-l { background: linear-gradient(145deg, #441a1a, #e74c3c); }
         .btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
-    <div class="container">
-        <span class="score" id="wins">0</span>
-        <span class="score" id="losses">0</span>
+    <div class="scoreboard-wrapper">
+        <div class="score-box">
+            <span class="score" id="wins">0</span>
+        </div>
+        
+        <div class="score-box">
+            <span class="score" id="losses">0</span>
+        </div>
     </div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; font-family: 'Orbitron'; margin-bottom: 20px;">FC26 ADMIN</h1>
+    <h1 style="color: gold; font-family: 'Orbitron'; margin-bottom: 20px;">FC26 CONTROL</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <div onclick="res()" style="color: #444; cursor: pointer; margin-top: 20px;">Sıfırla</div>
+    <div onclick="res()" style="color: #444; cursor: pointer; margin-top: 30px; font-size: 14px;">Sıfırla</div>
 </div>
 
 <script>
@@ -81,19 +80,14 @@
     const db = firebase.database();
     const scoreRef = db.ref('skorlar');
 
-    scoreRef.on('value', (snapshot) => {
-        const data = snapshot.val() || { wins: 0, losses: 0 };
-        document.getElementById('wins').innerText = data.wins || 0;
-        document.getElementById('losses').innerText = data.losses || 0;
+    scoreRef.on('value', (s) => {
+        const d = s.val() || { wins: 0, losses: 0 };
+        document.getElementById('wins').innerText = d.wins || 0;
+        document.getElementById('losses').innerText = d.losses || 0;
     });
 
-    function update(type, val) {
-        scoreRef.child(type).transaction((current) => (current || 0) + val);
-    }
-
-    function res() {
-        if(confirm('Sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 });
-    }
+    function update(t, v) { scoreRef.child(t).transaction(c => (c || 0) + v); }
+    function res() { if(confirm('Sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 }); }
 
     if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
