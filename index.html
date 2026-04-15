@@ -20,15 +20,16 @@
 
         .container {
             position: relative;
-            width: 1000px; /* Görsel genişliği */
-            height: 450px; /* Görsel yüksekliği */
-            background: url('bp.jpg') no-repeat center center;
+            width: 1000px;
+            height: 450px;
+            /* UZANTI .png OLARAK GÜNCELLENDİ */
+            background: url('bp.png') no-repeat center center;
             background-size: contain;
         }
 
         .score { 
             position: absolute;
-            top: 48%; /* Dikey hizalama */
+            top: 50%;
             transform: translateY(-50%);
             font-size: 130px; 
             color: #ffffff;
@@ -37,20 +38,20 @@
             text-align: center;
         }
 
-        /* SOL SKOR - Yerini buradan ayarla */
+        /* Sayıları tam kutuların içine oturtmak için milimetrik ayarlar */
         #wins { 
             left: 105px; 
         }
 
-        /* SAĞ SKOR - Yerini buradan ayarla */
         #losses { 
             right: 105px; 
         }
 
         #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 20px; }
-        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; }
+        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; box-shadow: 0 5px 0 #000;}
         .btn-w { background: #d4af37; }
         .btn-l { background: #c0392b; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
     </style>
 </head>
 <body>
@@ -63,10 +64,10 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold;">FC26 ADMIN</h1>
+    <h1 style="color: gold; margin-bottom: 20px;">FC26 ADMIN</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="res()" style="color: grey; background: none; border: none; margin-top: 20px; cursor: pointer;">Skorları Sıfırla</button>
+    <button onclick="res()" style="color: #444; background: none; border: none; margin-top: 30px; cursor: pointer;">Sıfırla</button>
 </div>
 
 <script>
