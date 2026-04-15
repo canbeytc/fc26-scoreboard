@@ -2,101 +2,87 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 - Dynamic Scoreboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
+    <title>FC26 Scoreboard - Ultimate Fix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; overflow: hidden; font-family: 'Anton', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        
-        .main-container { position: relative; width: 1000px; height: 500px; background: url('bp.png') no-repeat center; background-size: contain; }
-        
-        .score { 
-            position: absolute; font-size: 110px; color: white; cursor: move; 
-            text-shadow: 0 0 20px rgba(212,175,55,0.7), 4px 4px 8px black;
-            user-select: none; min-width: 100px; text-align: center;
+        body { background: transparent; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+
+        .scoreboard-container {
+            position: relative;
+            width: 1000px; /* Görsel genişliği */
+            height: 450px;
+            background: url('bp.png') no-repeat center center;
+            background-size: contain;
+            display: flex;
+            align-items: center;
         }
 
-        /* Admin Panel Tasarımı */
-        #adminUI { 
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
-            background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+        /* Sayıların içinde duracağı ana taşıyıcılar */
+        .score-wrapper {
+            position: absolute;
+            top: 49%; /* Dikeyde kutuların tam ortası */
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 115px; /* Sayıları kutulara doğru iten ana ayar */
         }
-        .btn { padding: 20px 40px; font-size: 24px; cursor: pointer; border-radius: 10px; border: none; color: white; font-family: 'Anton'; width: 300px; }
-        .btn-w { background: #27ae60; } .btn-l { background: #e74c3c; }
-        .guide-text { color: #aaa; font-size: 14px; text-align: center; position: absolute; bottom: 20px; }
+
+        .score { 
+            font-size: 100px; 
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.6), 4px 4px 8px rgba(0,0,0,0.8);
+            width: 150px; /* Sayı alanı genişliği */
+            text-align: center;
+            letter-spacing: -2px;
+        }
+
+        /* ADMIN PANELİ */
+        #adminUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0e0e10; z-index: 999; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .btn { width: 300px; padding: 20px; font-size: 24px; color: white; border: none; border-radius: 8px; cursor: pointer; font-family: 'Orbitron'; }
+        .btn-w { background: #2ecc71; } .btn-l { background: #e74c3c; }
     </style>
 </head>
 <body>
 
-<div class="main-container" id="board">
-    <div id="wins" class="score" style="left: 130px; top: 170px;">0</div>
-    <div id="losses" class="score" style="right: 130px; top: 170px;">0</div>
+<div id="overlay">
+    <div class="scoreboard-container">
+        <div class="score-wrapper">
+            <span class="score" id="wins">0</span>
+            <span class="score" id="losses">0</span>
+        </div>
+    </div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold;">FC26 YAYIN KONTROL</h1>
-    <div style="display: flex; gap: 20px;">
-        <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
-        <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    </div>
-    <button onclick="res()" style="background: none; color: #555; border: 1px solid #333; padding: 5px 15px; cursor: pointer;">Skorları Sıfırla</button>
-    
-    <div class="guide-text">
-        İPUCU: Sayıları fareyle sürükleyerek kutuların içine tam oturtabilirsin.<br>
-        Yerleri otomatik olarak kaydedilir.
-    </div>
+    <h1 style="color: white; font-family: 'Orbitron'; margin-bottom: 20px;">CONTROL PANEL</h1>
+    <button class="btn btn-w" onclick="update('wins', 1)">WIN +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">LOSS +1</button>
+    <div onclick="res()" style="color: #444; cursor: pointer; margin-top: 20px;">Reset Score</div>
 </div>
 
 <script>
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const scoreRef = db.ref('skorlar');
 
-    // Verileri Senkronize Et
-    db.ref('skorlar').on('value', s => {
+    scoreRef.on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wins').innerText = d.wins;
         document.getElementById('losses').innerText = d.losses;
     });
 
-    // Pozisyonları Senkronize Et
-    db.ref('pos').on('value', s => {
-        const p = s.val();
-        if(p) {
-            if(p.w) { wins.style.left = p.w.l; wins.style.top = p.w.t; }
-            if(p.l) { losses.style.left = p.l.l; losses.style.top = p.l.t; }
-        }
-    });
+    function update(t, v) { scoreRef.child(t).transaction(c => (c || 0) + v); }
+    function res() { if(confirm('Sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 }); }
 
-    function update(t, v) { db.ref('skorlar/'+t).transaction(c => (c || 0) + v); }
-    function res() { if(confirm('Sıfırlansın mı?')) db.ref('skorlar').set({ wins: 0, losses: 0 }); }
-
-    // SÜRÜKLE BIRAK SİSTEMİ (Sadece Admin Modunda)
     if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
-        makeDraggable(document.getElementById('wins'), 'w');
-        makeDraggable(document.getElementById('losses'), 'l');
-    }
-
-    function makeDraggable(elm, key) {
-        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-        elm.onmousedown = (e) => {
-            e.preventDefault();
-            pos3 = e.clientX; pos4 = e.clientY;
-            document.onmouseup = () => {
-                document.onmouseup = null; document.onmousemove = null;
-                db.ref('pos/' + key).set({ l: elm.style.left, t: elm.style.top });
-            };
-            document.onmousemove = (e) => {
-                pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
-                pos3 = e.clientX; pos4 = e.clientY;
-                elm.style.top = (elm.offsetTop - pos2) + "px";
-                elm.style.left = (elm.offsetLeft - pos1) + "px";
-                elm.style.right = "auto"; // Sağ taraf için fix
-            };
-        };
+        document.getElementById('overlay').style.display = 'none';
     }
 </script>
 </body>
