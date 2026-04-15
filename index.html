@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Pro Version</title>
+    <title>FC26 Scoreboard - Pro Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -21,8 +21,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            /* Arka plandaki damalı deseni yok etmek için (geçici çözüm) */
-            mix-blend-mode: multiply; 
+            /* ÖNEMLİ: Eğer resmin arkası kareliyse OBS'de 'Chroma Key' filtresi ekleyip 
+               o gri/beyaz rengi seçersen şeffaflaşır. */
         }
 
         .score-container {
@@ -30,7 +30,6 @@
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            /* Sayıları kalkanın tam üzerine oturtmak için ayarlar */
             padding: 0 120px;
             margin-top: 10px;
         }
@@ -38,18 +37,39 @@
         .score { 
             font-size: 115px; 
             color: white;
-            text-shadow: 2px 4px 10px rgba(0,0,0,0.9);
+            text-shadow: 4px 4px 15px rgba(0,0,0,1);
             width: 130px;
             text-align: center;
             line-height: 1;
         }
 
-        .spacer { width: 160px; } /* Kalkanın üzerini tam boş bırakmak için */
+        .spacer { width: 160px; }
 
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; gap: 20px; }
-        .btn { width: 300px; padding: 20px; font-size: 25px; cursor: pointer; border-radius: 10px; border: none; color: white; font-family: 'Anton'; }
-        .btn-w { background: green; }
-        .btn-l { background: red; }
+        /* ADMIN PANELİ TASARIMI */
+        #adminUI { 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: #111; 
+            gap: 20px; 
+        }
+        .btn { 
+            width: 350px; 
+            padding: 30px; 
+            font-size: 35px; 
+            cursor: pointer; 
+            border-radius: 20px; 
+            border: none; 
+            color: white; 
+            font-family: 'Anton';
+            text-transform: uppercase;
+            box-shadow: 0 8px 0 #000;
+        }
+        .btn-w { background: linear-gradient(#2ecc71, #27ae60); }
+        .btn-l { background: linear-gradient(#e74c3c, #c0392b); }
+        .btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #000; }
     </style>
 </head>
 <body>
@@ -65,28 +85,42 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold;">FC26 CONTROL</h1>
-    <button class="btn btn-w" onclick="up('wins', 1)">WINS +1</button>
-    <button class="btn btn-l" onclick="up('losses', 1)">LOSS +1</button>
+    <h1 style="color: gold; font-size: 40px; margin-bottom: 20px;">FC26 KUMANDA</h1>
+    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
+    <button onclick="res()" style="margin-top:40px; background:none; border:1px solid #444; color:#444; padding:10px; cursor:pointer;">Sıfırla</button>
 </div>
 
 <script>
+    // FİRBASE AYARLARI
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    
+    // BURASI KRİTİK: Admin ve Tabela aynı klasöre bakmalı
+    const DB_NAME = 'fc26_stats'; 
 
-    db.ref('fc26_stats').on('value', (s) => {
+    // VERİLERİ ÇEK
+    db.ref(DB_NAME).on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wins').innerText = d.wins;
         document.getElementById('losses').innerText = d.losses;
     });
 
-    function up(f, v) { db.ref('fc26_stats/' + f).transaction(c => (c || 0) + v); }
+    // VERİLERİ GÜNCELLE
+    function update(field, val) {
+        db.ref(DB_NAME + '/' + field).transaction(c => (c || 0) + val);
+    }
 
-    if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
+    function res() {
+        if(confirm('Sıfırlansın mı?')) db.ref(DB_NAME).set({ wins: 0, losses: 0 });
+    }
+
+    // MOD KONTROLÜ
+    if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#000";
+        document.body.style.background = "#111";
     }
 </script>
 </body>
