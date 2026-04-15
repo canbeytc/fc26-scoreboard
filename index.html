@@ -3,25 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { margin: 0; background-color: transparent; overflow: hidden; font-family: 'Arial Black', sans-serif; }
-        .container { position: relative; width: 1000px; height: 400px; margin: auto; }
-        .bg-img { width: 100%; display: block; }
-        
-        .text { position: absolute; color: white; font-weight: 900; text-transform: uppercase; text-shadow: 3px 3px 6px #000; display: flex; justify-content: center; align-items: center; }
-        
-        #home-name { top: 68px; left: 115px; width: 220px; font-size: 26px; }
-        #away-name { top: 68px; right: 115px; width: 220px; font-size: 26px; }
-        #score { top: 155px; left: 50%; transform: translateX(-50%); font-size: 55px; color: #FFD700; letter-spacing: 5px; }
-
-        /* Admin Paneli - Sadece sen göreceksin, yayında gizlemek için OBS'de altını kırpabilirsin */
-        .admin-panel {
-            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; display: flex; gap: 10px; z-index: 999;
+        body { 
+            margin: 0; 
+            background-color: transparent; 
+            overflow: hidden; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
         }
-        button { padding: 10px 20px; cursor: pointer; font-weight: bold; border: none; border-radius: 5px; }
-        .btn-win { background: #27ae60; color: white; }
-        .btn-lose { background: #c0392b; color: white; }
-        .btn-reset { background: #7f8c8d; color: white; }
+        
+        /* SKOR TABELASI ALANI */
+        .container { 
+            position: relative; 
+            width: 1000px; 
+            height: 400px; 
+            margin: 20px auto; 
+        }
+        .bg-img { width: 100%; display: block; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+        
+        .text { 
+            position: absolute; 
+            color: white; 
+            font-weight: 900; 
+            text-transform: uppercase; 
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+        
+        #home-name { top: 72px; left: 125px; width: 200px; font-size: 24px; letter-spacing: 2px; }
+        #away-name { top: 72px; right: 125px; width: 200px; font-size: 24px; letter-spacing: 2px; }
+        #score { 
+            top: 158px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            font-size: 58px; 
+            color: #f1c40f; 
+            font-family: 'Arial Black', sans-serif;
+        }
+
+        /* MODERN ADMIN PANELİ */
+        .admin-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 15, 15, 0.95);
+            padding: 12px 25px;
+            border-radius: 50px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border: 1px solid rgba(241, 196, 15, 0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .admin-panel span { color: #888; font-size: 12px; font-weight: bold; margin-right: 5px; }
+
+        button {
+            padding: 10px 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 800;
+            border: none;
+            border-radius: 25px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+        }
+
+        button:active { transform: scale(0.9); }
+
+        .btn-win { 
+            background: linear-gradient(45deg, #27ae60, #2ecc71); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        .btn-win:hover { box-shadow: 0 0 20px rgba(46, 204, 113, 0.6); background: #2ecc71; }
+
+        .btn-lose { 
+            background: linear-gradient(45deg, #c0392b, #e74c3c); 
+            color: white;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        .btn-lose:hover { box-shadow: 0 0 20px rgba(231, 76, 60, 0.6); background: #e74c3c; }
+
+        .btn-reset { 
+            background: #2c3e50; 
+            color: #bdc3c7;
+            font-size: 11px;
+        }
+        .btn-reset:hover { background: #34495e; color: white; }
+
     </style>
 </head>
 <body>
@@ -33,49 +106,12 @@
         <div id="away-name" class="text">LOSE</div>
     </div>
 
-    <div class="admin-panel" id="controls">
+    <div class="admin-panel">
+        <span>KONTROL:</span>
         <button class="btn-win" onclick="updateScore('evSkor', 1)">WIN +1</button>
         <button class="btn-lose" onclick="updateScore('depSkor', 1)">LOSE +1</button>
         <button class="btn-reset" onclick="resetScores()">SIFIRLA</button>
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const scoreRef = ref(db, 'skorlar');
-
-        // Verileri Dinle ve Ekrana Yaz
-        onValue(scoreRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('score').innerText = `${data.evSkor || 0} - ${data.depSkor || 0}`;
-            }
-        });
-
-        // Skor Güncelleme Fonksiyonu
-        window.updateScore = (type, amount) => {
-            const specificRef = ref(db, `skorlar/${type}`);
-            runTransaction(specificRef, (currentValue) => {
-                return (currentValue || 0) + amount;
-            });
-        };
-
-        // Sıfırlama Fonksiyonu
-        window.resetScores = () => {
-            set(scoreRef, {
-                evSahibi: "WIN",
-                deplasman: "LOSE",
-                evSkor: 0,
-                depSkor: 0
-            });
-        };
-    </script>
-</body>
-</html>
+        import { initializeApp
