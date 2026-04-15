@@ -2,98 +2,101 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Pro Final</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <title>FC26 - Dynamic Scoreboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-
-        .scoreboard-wrapper {
-            position: relative;
-            width: 1000px;
-            height: 450px;
-            background: url('bp.png') no-repeat center center;
-            background-size: contain;
-        }
-
-        /* SAYI KUTULARI - Milimetrik Hizalanmış */
-        .score-box {
-            position: absolute;
-            width: 125px; /* Kutunun genişliği */
-            height: 105px; /* Kutunun yüksekliği */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            top: 222px; /* Dikey Konum */
-            transform: translateY(-50%);
-            /* Gelişmiş Parlama Efekti */
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.2);
-        }
-
-        /* SOL TARAF (GALİBİYET) */
-        #win-box { left: 110px; }
-
-        /* SAĞ TARAF (MAĞLUBİYET) */
-        #loss-box { right: 110px; }
-
+        body { background: transparent; overflow: hidden; font-family: 'Anton', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        .main-container { position: relative; width: 1000px; height: 500px; background: url('bp.png') no-repeat center; background-size: contain; }
+        
         .score { 
-            font-size: 85px; 
-            color: #ffffff;
-            font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 2px 2px 5px #000;
-            line-height: 1;
+            position: absolute; font-size: 110px; color: white; cursor: move; 
+            text-shadow: 0 0 20px rgba(212,175,55,0.7), 4px 4px 8px black;
+            user-select: none; min-width: 100px; text-align: center;
         }
 
-        /* ADMIN PANELİ - Sadece ?mode=admin ile görünür */
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; background: #0a0a0c; gap: 20px; position: fixed; z-index: 999; }
-        .btn { width: 300px; padding: 25px; font-size: 25px; cursor: pointer; border-radius: 10px; border: none; color: white; font-family: 'Orbitron'; }
-        .btn-w { background: #27ae60; box-shadow: 0 5px 0 #1e8449; }
-        .btn-l { background: #c0392b; box-shadow: 0 5px 0 #922b21; }
-        .btn:active { transform: translateY(3px); box-shadow: none; }
+        /* Admin Panel Tasarımı */
+        #adminUI { 
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+            background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+        }
+        .btn { padding: 20px 40px; font-size: 24px; cursor: pointer; border-radius: 10px; border: none; color: white; font-family: 'Anton'; width: 300px; }
+        .btn-w { background: #27ae60; } .btn-l { background: #e74c3c; }
+        .guide-text { color: #aaa; font-size: 14px; text-align: center; position: absolute; bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div id="overlayUI">
-    <div class="scoreboard-wrapper">
-        <div class="score-box" id="win-box">
-            <span class="score" id="wins">0</span>
-        </div>
-        <div class="score-box" id="loss-box">
-            <span class="score" id="losses">0</span>
-        </div>
-    </div>
+<div class="main-container" id="board">
+    <div id="wins" class="score" style="left: 130px; top: 170px;">0</div>
+    <div id="losses" class="score" style="right: 130px; top: 170px;">0</div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; font-family: 'Orbitron'; margin-bottom: 20px;">FC26 CONTROL</h1>
-    <button class="btn btn-w" onclick="update('wins', 1)">VICTORY +1</button>
-    <button class="btn btn-l" onclick="update('losses', 1)">DEFEAT +1</button>
-    <div onclick="res()" style="color: #333; cursor: pointer; margin-top: 30px;">Reset Data</div>
+    <h1 style="color: gold;">FC26 YAYIN KONTROL</h1>
+    <div style="display: flex; gap: 20px;">
+        <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
+        <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
+    </div>
+    <button onclick="res()" style="background: none; color: #555; border: 1px solid #333; padding: 5px 15px; cursor: pointer;">Skorları Sıfırla</button>
+    
+    <div class="guide-text">
+        İPUCU: Sayıları fareyle sürükleyerek kutuların içine tam oturtabilirsin.<br>
+        Yerleri otomatik olarak kaydedilir.
+    </div>
 </div>
 
 <script>
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const scoreRef = db.ref('skorlar');
 
-    scoreRef.on('value', (s) => {
+    // Verileri Senkronize Et
+    db.ref('skorlar').on('value', s => {
         const d = s.val() || { wins: 0, losses: 0 };
-        document.getElementById('wins').innerText = d.wins || 0;
-        document.getElementById('losses').innerText = d.losses || 0;
+        document.getElementById('wins').innerText = d.wins;
+        document.getElementById('losses').innerText = d.losses;
     });
 
-    function update(t, v) { scoreRef.child(t).transaction(c => (c || 0) + v); }
-    function res() { if(confirm('Sıfırlansın mı?')) scoreRef.set({ wins: 0, losses: 0 }); }
+    // Pozisyonları Senkronize Et
+    db.ref('pos').on('value', s => {
+        const p = s.val();
+        if(p) {
+            if(p.w) { wins.style.left = p.w.l; wins.style.top = p.w.t; }
+            if(p.l) { losses.style.left = p.l.l; losses.style.top = p.l.t; }
+        }
+    });
 
+    function update(t, v) { db.ref('skorlar/'+t).transaction(c => (c || 0) + v); }
+    function res() { if(confirm('Sıfırlansın mı?')) db.ref('skorlar').set({ wins: 0, losses: 0 }); }
+
+    // SÜRÜKLE BIRAK SİSTEMİ (Sadece Admin Modunda)
     if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
-        document.getElementById('overlayUI').style.display = 'none';
+        makeDraggable(document.getElementById('wins'), 'w');
+        makeDraggable(document.getElementById('losses'), 'l');
+    }
+
+    function makeDraggable(elm, key) {
+        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+        elm.onmousedown = (e) => {
+            e.preventDefault();
+            pos3 = e.clientX; pos4 = e.clientY;
+            document.onmouseup = () => {
+                document.onmouseup = null; document.onmousemove = null;
+                db.ref('pos/' + key).set({ l: elm.style.left, t: elm.style.top });
+            };
+            document.onmousemove = (e) => {
+                pos1 = pos3 - e.clientX; pos2 = pos4 - e.clientY;
+                pos3 = e.clientX; pos4 = e.clientY;
+                elm.style.top = (elm.offsetTop - pos2) + "px";
+                elm.style.left = (elm.offsetLeft - pos1) + "px";
+                elm.style.right = "auto"; // Sağ taraf için fix
+            };
+        };
     }
 </script>
 </body>
