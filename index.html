@@ -3,121 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FC26 Scoreboard - Premium Gold</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Cinzel+Decorative:wght@900&display=swap" rel="stylesheet">
+    <title>FC26 Scoreboard - UT Champs Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
+        /* TEMEL AYARLAR */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; color: white; text-transform: uppercase; }
+        body { background: transparent; font-family: 'Bebas Neue', cursive; overflow: hidden; color: white; text-transform: uppercase; }
 
         #overlayUI { display: flex; align-items: center; justify-content: center; height: 100vh; }
 
-        /* PREMİUM GOLD GÖVDE */
+        /* YENİ TASARIM: UT CHAMPS STİLİ */
         .board { 
             display: flex; 
-            height: 80px; 
+            height: 70px; /* Biraz daha basık */
             align-items: center;
-            background: linear-gradient(180deg, rgba(30,30,30,0.95) 0%, rgba(10,10,10,0.95) 100%);
-            border: 3px solid #f2e1a2; /* Açık Altın */
-            border-radius: 5px;
-            padding: 0 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(242, 225, 162, 0.2);
-            position: relative;
+            background: rgba(0, 0, 0, 0.7); /* Şeffaf siyah arka plan */
+            border-radius: 10px; /* Köşeler yuvarlak */
+            padding: 5px 15px; /* İçerik için boşluk */
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            border: 2px solid #b38b4d; /* Altın rengi kenarlık */
         }
 
-        /* IŞIK EFEKTLERİ */
-        .board::before { content:''; position: absolute; left: 0; top: 0; height: 100%; width: 5px; background: #5eff00; border-radius: 5px 0 0 5px; box-shadow: 0 0 15px #5eff00; }
-        .board::after { content:''; position: absolute; right: 0; top: 0; height: 100%; width: 5px; background: #ff0000; border-radius: 0 5px 5px 0; box-shadow: 0 0 15px #ff0000; }
-
-        .panel { display: flex; align-items: center; justify-content: center; width: 100px; height: 100%; }
-        .score { font-size: 70px; line-height: 1; text-shadow: 3px 3px 6px rgba(0,0,0,0.8); color: #fff; }
-
-        /* ORTADAKİ GOLD KALKAN */
-        .badge-container {
+        .panel { 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            height: 100%;
             width: 100px;
-            height: 120px;
-            background: linear-gradient(135deg, #f2e1a2 0%, #b38b4d 100%); /* Gold Degrade */
-            border: 4px solid #fdfdfd;
-            margin: 0 10px;
+        }
+
+        /* Sayıların Tipi ve Boyutu */
+        .score { 
+            font-size: 55px; /* Büyük sayı */
+            font-weight: normal; /* Bebas Neue zaten kalın */
+            line-height: 1;
+            color: white; /* Sayılar beyaz */
+        }
+
+        /* SOL PANEL: YEŞİL */
+        .p-left { 
+            border-right: 2px solid #b38b4d; /* Altın çizgisi */
+        }
+
+        /* SAĞ PANEL: KIRMIZI */
+        .p-right { 
+            border-left: 2px solid #b38b4d; /* Altın çizgisi */
+        }
+
+        /* ORTADAKİ ROZET KUTUSU */
+        .badge {
+            background: linear-gradient(180deg, #d32f2f 0%, #7f1d1d 100%); /* Canlı kırmızıdan koyuya */
+            width: 70px;
+            height: 90px; /* Panellerden daha yüksek durmalı */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 20;
-            clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
-            margin-top: -15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.7);
+            clip-path: polygon(50% 0%, 100% 20%, 100% 80%, 50% 100%, 0% 80%, 0% 20%); /* Rozet şekli */
+            margin: 0 10px; /* Panellerden ayırmak için */
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            margin-top: -15px; /* Panellerden daha yüksek durur */
+            border: 2px solid #b38b4d; /* Altın rengi kenarlık */
         }
 
-        .ut-text { font-family: 'Cinzel Decorative', cursive; color: #000; font-size: 50px; font-weight: 900; line-height: 0.8; margin-top: -10px; }
-        .champs-text { color: #000; font-size: 11px; letter-spacing: 2px; font-weight: bold; border-top: 2px solid #000; padding-top: 2px; }
+        /* Rozet Üstündeki Yazılar */
+        .ut-text { 
+            font-size: 28px; 
+            letter-spacing: 2px;
+            text-align: center;
+            line-height: 1.1;
+        }
+        .champs-text {
+            font-size: 8px;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
 
-        /* ADMIN PANELİ (GİZLİ) */
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 15px; padding: 20px; }
-        .btn { width: 100%; max-width: 350px; padding: 20px; font-size: 24px; font-family: 'Anton'; border: none; border-radius: 10px; cursor: pointer; color: white; transition: 0.1s; }
-        .btn-w { background: #1e7020; border-bottom: 5px solid #134614; }
-        .btn-l { background: #7a1a1a; border-bottom: 5px solid #4e1111; }
-        .btn-s { background: #333; font-size: 16px; margin-top: 20px; color: #999; }
-        .btn:active { transform: translateY(3px); border-bottom: none; }
+        /* ADMIN UI AYNI KALIYOR */
+        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #111; color: white; gap: 15px; padding: 20px; }
+        .btn { width: 100%; max-width: 350px; padding: 25px; font-size: 24px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; text-transform: uppercase; }
+        .btn-w { background: #1e7020; }
+        .btn-l { background: #7a1a1a; }
+        .btn-s { background: #444; padding: 10px; font-size: 14px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
     <div class="board">
-        <div class="panel">
-            <span class="score" id="wScore">0</span>
-        </div>
-
-        <div class="badge-container">
+        <div class="panel p-left"><span class="score" id="wScore">0</span></div>
+        <div class="badge">
             <span class="ut-text">UT</span>
             <span class="champs-text">CHAMPIONS</span>
         </div>
-
-        <div class="panel">
-            <span class="score" id="lScore">0</span>
-        </div>
+        <div class="panel p-right"><span class="score" id="lScore">0</span></div>
     </div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color:#b38b4d; letter-spacing:3px; margin-bottom:10px;">FC26 YAYIN KUMANDASI</h1>
+    <h1>FC26 KUMANDA</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-w" style="opacity:0.5; font-size:16px; padding:10px;" onclick="update('wins', -1)">WINS -1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button class="btn btn-s" onclick="reset()">SKORLARI SIFIRLA</button>
+    <button class="btn btn-l" style="opacity:0.5; font-size:16px; padding:10px;" onclick="update('losses', -1)">LOSSES -1</button>
+    <button class="btn btn-s" onclick="reset()">SIFIRLA</button>
 </div>
 
 <script>
-    // FİRBASE AYARLARI
+    // FİRBASE AYARIN (DEĞİŞTİRME)
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // DİKKAT: Senin database klasör ismin
     const DB_PATH = 'fc26_data'; 
 
-    // MOD KONTROLÜ
     const mode = new URLSearchParams(window.location.search).get('mode');
     if (mode === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#0a0a0a";
+        document.body.style.background = "#111";
         document.body.style.overflow = "auto";
     }
 
-    // VERİ DİNLEME (TABELAYI GÜNCELLE)
+    // VERİ DİNLEME
     db.ref(DB_PATH).on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wScore').innerText = d.wins;
         document.getElementById('lScore').innerText = d.losses;
     });
 
-    // VERİ YAZMA (BUTONLAR)
+    // VERİ GÜNCELLEME
     function update(f, v) {
         db.ref(DB_PATH + '/' + f).transaction(c => Math.max(0, (c || 0) + v));
     }
 
     function reset() {
-        if(confirm('Tüm skorlar sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+        if(confirm('Sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
     }
 </script>
 </body>
