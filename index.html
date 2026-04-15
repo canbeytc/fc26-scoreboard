@@ -16,13 +16,11 @@
             position: relative;
             width: 800px;
             height: 300px;
-            background: url('./bp.png') no-repeat center center;
+            background: url('bp.png') no-repeat center center;
             background-size: contain;
             display: flex;
             align-items: center;
             justify-content: center;
-            /* ÖNEMLİ: Eğer resmin arkası kareliyse OBS'de 'Chroma Key' filtresi ekleyip 
-               o gri/beyaz rengi seçersen şeffaflaşır. */
         }
 
         .score-container {
@@ -67,8 +65,8 @@
             text-transform: uppercase;
             box-shadow: 0 8px 0 #000;
         }
-        .btn-w { background: linear-gradient(#2ecc71, #27ae60); }
-        .btn-l { background: linear-gradient(#e74c3c, #c0392b); }
+        .btn-win { background: linear-gradient(#2ecc71, #27ae60); }
+        .btn-loss { background: linear-gradient(#e74c3c, #c0392b); }
         .btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #000; }
     </style>
 </head>
@@ -86,9 +84,9 @@
 
 <div id="adminUI">
     <h1 style="color: gold; font-size: 40px; margin-bottom: 20px;">FC26 KUMANDA</h1>
-    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="res()" style="margin-top:40px; background:none; border:1px solid #444; color:#444; padding:10px; cursor:pointer;">Sıfırla</button>
+    <button class="btn btn-win" onclick="updateScore('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-loss" onclick="updateScore('losses', 1)">MAĞLUBİYET +1</button>
+    <button onclick="resetData()" style="margin-top:40px; background:none; border:1px solid #444; color:#666; padding:10px; cursor:pointer;">Skorları Sıfırla</button>
 </div>
 
 <script>
@@ -97,26 +95,28 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     
-    // BURASI KRİTİK: Admin ve Tabela aynı klasöre bakmalı
-    const DB_NAME = 'fc26_stats'; 
+    // YOLU SABİTLEDİK (Hem okuma hem yazma buraya bakacak)
+    const DB_PATH = 'fc26_live_data'; 
 
-    // VERİLERİ ÇEK
-    db.ref(DB_NAME).on('value', (s) => {
-        const d = s.val() || { wins: 0, losses: 0 };
-        document.getElementById('wins').innerText = d.wins;
-        document.getElementById('losses').innerText = d.losses;
+    // VERİLERİ DİNLE (TABELA İÇİN)
+    db.ref(DB_PATH).on('value', (snapshot) => {
+        const data = snapshot.val() || { wins: 0, losses: 0 };
+        document.getElementById('wins').innerText = data.wins;
+        document.getElementById('losses').innerText = data.losses;
     });
 
-    // VERİLERİ GÜNCELLE
-    function update(field, val) {
-        db.ref(DB_NAME + '/' + field).transaction(c => (c || 0) + val);
+    // VERİLERİ GÜNCELLE (ADMIN İÇİN)
+    function updateScore(field, val) {
+        db.ref(DB_PATH + '/' + field).transaction(current => (current || 0) + val);
     }
 
-    function res() {
-        if(confirm('Sıfırlansın mı?')) db.ref(DB_NAME).set({ wins: 0, losses: 0 });
+    function resetData() {
+        if(confirm('Tüm skorlar sıfırlansın mı?')) {
+            db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+        }
     }
 
-    // MOD KONTROLÜ
+    // ADMIN MODU AÇILIŞI
     if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
