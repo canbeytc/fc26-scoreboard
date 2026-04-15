@@ -3,65 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <title>FC26 Scoreboard - Pro Final</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        body { background: transparent; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-        /* ANA TABELA ALANI */
         .scoreboard-wrapper {
             position: relative;
             width: 1000px;
             height: 450px;
             background: url('bp.png') no-repeat center center;
             background-size: contain;
-            display: flex;
-            justify-content: space-between; /* Sol ve sağ kutuyu iki uca iter */
-            align-items: center;
-            padding: 0 75px; /* Kenarlardan içe doğru pay bırakır */
         }
 
-        /* SKOR KUTULARI (GÖRÜNMEZ ÇERÇEVE) */
+        /* SAYI KUTULARI - Milimetrik Hizalanmış */
         .score-box {
-            width: 200px; /* Kutuların genişliğini buradan ayarla */
-            height: 150px;
+            position: absolute;
+            width: 125px; /* Kutunun genişliği */
+            height: 105px; /* Kutunun yüksekliği */
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-top: -10px; /* Kutuları hafif yukarı/aşağı taşır */
+            top: 222px; /* Dikey Konum */
+            transform: translateY(-50%);
+            /* Gelişmiş Parlama Efekti */
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.2);
         }
+
+        /* SOL TARAF (GALİBİYET) */
+        #win-box { left: 110px; }
+
+        /* SAĞ TARAF (MAĞLUBİYET) */
+        #loss-box { right: 110px; }
 
         .score { 
-            font-size: 115px; 
+            font-size: 85px; 
             color: #ffffff;
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.6), 4px 4px 10px rgba(0,0,0,0.9);
-            letter-spacing: -5px;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 2px 2px 5px #000;
+            line-height: 1;
         }
 
-        /* ADMIN PANELİ */
-        #adminUI { 
-            display: none; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; width: 100vw; background: #0a0a0c; gap: 20px; 
-            position: fixed; top: 0; left: 0; z-index: 999;
-        }
-        .btn { width: 320px; padding: 25px; font-size: 28px; cursor: pointer; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); color: white; font-family: 'Orbitron'; transition: 0.2s; }
-        .btn-w { background: linear-gradient(145deg, #1d3521, #2ecc71); }
-        .btn-l { background: linear-gradient(145deg, #441a1a, #e74c3c); }
-        .btn:active { transform: scale(0.95); }
+        /* ADMIN PANELİ - Sadece ?mode=admin ile görünür */
+        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; background: #0a0a0c; gap: 20px; position: fixed; z-index: 999; }
+        .btn { width: 300px; padding: 25px; font-size: 25px; cursor: pointer; border-radius: 10px; border: none; color: white; font-family: 'Orbitron'; }
+        .btn-w { background: #27ae60; box-shadow: 0 5px 0 #1e8449; }
+        .btn-l { background: #c0392b; box-shadow: 0 5px 0 #922b21; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
     <div class="scoreboard-wrapper">
-        <div class="score-box">
+        <div class="score-box" id="win-box">
             <span class="score" id="wins">0</span>
         </div>
-        
-        <div class="score-box">
+        <div class="score-box" id="loss-box">
             <span class="score" id="losses">0</span>
         </div>
     </div>
@@ -69,9 +71,9 @@
 
 <div id="adminUI">
     <h1 style="color: gold; font-family: 'Orbitron'; margin-bottom: 20px;">FC26 CONTROL</h1>
-    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <div onclick="res()" style="color: #444; cursor: pointer; margin-top: 30px; font-size: 14px;">Sıfırla</div>
+    <button class="btn btn-w" onclick="update('wins', 1)">VICTORY +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">DEFEAT +1</button>
+    <div onclick="res()" style="color: #333; cursor: pointer; margin-top: 30px;">Reset Data</div>
 </div>
 
 <script>
