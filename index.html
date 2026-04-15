@@ -2,51 +2,43 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - PRO</title>
+    <title>FC26 Scoreboard - Final Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; }
+        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
 
-        /* TABELA GÖRÜNÜMÜ */
-        #overlayUI { 
-            display: flex; justify-content: center; align-items: center; height: 100vh; 
-        }
         .container {
             position: relative;
-            width: 800px;
-            height: 300px;
-            background: url('./bp.png') no-repeat center center;
+            width: 900px;
+            height: 400px;
+            background: url('bp.png') no-repeat center center;
             background-size: contain;
         }
+
         .score { 
             position: absolute;
-            top: 48%;
+            top: 50%;
             transform: translateY(-50%);
-            font-size: 110px; 
+            font-size: 130px; 
             color: #ffffff;
-            text-shadow: 0 0 15px rgba(255, 160, 0, 0.8), 3px 3px 5px #000;
-            width: 140px;
+            text-shadow: 0 0 20px rgba(255, 174, 0, 0.7), 4px 4px 10px rgba(0,0,0,0.8);
+            width: 180px;
             text-align: center;
         }
-        #wins { left: 100px; }
-        #losses { right: 100px; }
 
-        /* ADMIN PANELİ GÖRÜNÜMÜ */
-        #adminUI { 
-            display: none; flex-direction: column; align-items: center; justify-content: center; 
-            min-height: 100vh; background: #111; gap: 20px; color: white;
-        }
-        .btn { 
-            width: 280px; padding: 20px; font-size: 24px; cursor: pointer; 
-            border-radius: 12px; border: none; font-family: 'Anton'; color: white;
-            box-shadow: 0 4px 0 #000;
-        }
+        #wins { left: 105px; }
+        #losses { right: 105px; }
+
+        /* ADMIN PANELİ */
+        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; background: #0a0a0a; gap: 20px; position: fixed; top: 0; left: 0; z-index: 999; }
+        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; box-shadow: 0 5px 0 #000; }
         .btn-w { background: #d4af37; }
         .btn-l { background: #c0392b; }
-        .btn:active { transform: translateY(2px); box-shadow: none; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
+        h1 { color: gold; font-size: 40px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -59,43 +51,48 @@
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold;">FC26 ADMIN PANEL</h1>
-    <button class="btn btn-w" onclick="updateScore('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-l" onclick="updateScore('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="resetScores()" style="margin-top:20px; background:none; border:1px solid #333; color:#555; padding:5px 15px; cursor:pointer;">Skorları Sıfırla</button>
+    <h1>FC26 KUMANDA</h1>
+    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
+    <button onclick="res()" style="background: none; border: 1px solid #333; color: #555; padding: 10px; margin-top: 20px; cursor: pointer;">Skorları Sıfırla</button>
 </div>
 
 <script>
-    // Firebase Bağlantısı
+    // SADECE DATABASE URL İLE BAĞLANTI (En Garanti Yol)
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const DB_REF = db.ref('fc26_data');
+    const ref = db.ref('fc26_stats');
 
-    // Verileri Dinle
-    DB_REF.on('value', (snapshot) => {
+    // VERİLERİ ANLIK ÇEK
+    ref.on('value', (snapshot) => {
         const data = snapshot.val() || { wins: 0, losses: 0 };
         document.getElementById('wins').innerText = data.wins;
         document.getElementById('losses').innerText = data.losses;
+    }, (error) => {
+        console.error("Okuma Hatası: ", error);
     });
 
-    // Skor Güncelleme Fonksiyonu
-    function updateScore(type, val) {
-        DB_REF.child(type).transaction((current) => (current || 0) + val)
-        .then(() => console.log("Başarıyla güncellendi"))
-        .catch((err) => alert("Hata: " + err.message));
+    // VERİ GÜNCELLE (HATA KONTROLLÜ)
+    function update(type, val) {
+        ref.child(type).transaction((current) => {
+            return (current || 0) + val;
+        }, (error, committed, snapshot) => {
+            if (error) {
+                alert("GÜNCELLEME HATASI! Firebase kurallarını kontrol et.\nHata: " + error);
+            }
+        });
     }
 
-    function resetScores() {
-        if(confirm('Emin misin?')) DB_REF.set({ wins: 0, losses: 0 });
+    function res() {
+        if(confirm('Sıfırlansın mı?')) ref.set({ wins: 0, losses: 0 });
     }
 
-    // URL'de ?mode=admin varsa paneli göster
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('mode') === 'admin') {
+    // MOD KONTROLÜ
+    if (window.location.search.includes('mode=admin')) {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#111";
+        document.body.style.background = "#0a0a0a";
     }
 </script>
 </body>
