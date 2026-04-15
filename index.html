@@ -2,12 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <title>FC26 Scoreboard & Admin</title>
     <style>
         body { 
             margin: 0; 
             background-color: transparent; 
             overflow: hidden; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            font-family: 'Arial Black', sans-serif; 
         }
         
         /* SKOR TABELASI ALANI */
@@ -15,89 +16,72 @@
             position: relative; 
             width: 1000px; 
             height: 400px; 
-            margin: 20px auto; 
+            margin: auto; 
+            transition: transform 0.3s ease;
         }
-        .bg-img { width: 100%; display: block; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+        .bg-img { width: 100%; display: block; }
         
         .text { 
             position: absolute; 
             color: white; 
             font-weight: 900; 
             text-transform: uppercase; 
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8); 
+            text-shadow: 3px 3px 6px #000; 
             display: flex; 
             justify-content: center; 
             align-items: center;
         }
         
-        #home-name { top: 72px; left: 125px; width: 200px; font-size: 24px; letter-spacing: 2px; }
-        #away-name { top: 72px; right: 125px; width: 200px; font-size: 24px; letter-spacing: 2px; }
+        #home-name { top: 72px; left: 125px; width: 200px; font-size: 26px; }
+        #away-name { top: 72px; right: 125px; width: 200px; font-size: 26px; }
         #score { 
-            top: 158px; 
+            top: 155px; 
             left: 50%; 
             transform: translateX(-50%); 
             font-size: 58px; 
-            color: #f1c40f; 
-            font-family: 'Arial Black', sans-serif;
+            color: #FFD700; 
         }
 
-        /* MODERN ADMIN PANELİ */
-        .admin-panel {
+        /* MODERN ADMIN PANELİ (Varsayılan olarak gizli) */
+        #admin-controls {
+            display: none;
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 15, 15, 0.95);
-            padding: 12px 25px;
-            border-radius: 50px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            border: 1px solid rgba(241, 196, 15, 0.3);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(10, 10, 10, 0.9);
+            padding: 20px 40px;
+            border-radius: 60px;
+            gap: 20px;
+            border: 2px solid #f1c40f;
+            box-shadow: 0 0 30px rgba(0,0,0,0.9);
+            backdrop-filter: blur(15px);
             z-index: 1000;
         }
 
-        .admin-panel span { color: #888; font-size: 12px; font-weight: bold; margin-right: 5px; }
-
         button {
-            padding: 10px 25px;
+            padding: 15px 35px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: 900;
             border: none;
-            border-radius: 25px;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 30px;
+            transition: all 0.2s;
             text-transform: uppercase;
         }
 
-        button:active { transform: scale(0.9); }
+        button:active { transform: scale(0.95); }
 
-        .btn-win { 
-            background: linear-gradient(45deg, #27ae60, #2ecc71); 
-            color: white; 
-            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-        }
-        .btn-win:hover { box-shadow: 0 0 20px rgba(46, 204, 113, 0.6); background: #2ecc71; }
+        .btn-win { background: linear-gradient(to bottom, #27ae60, #1e8449); color: white; border-bottom: 4px solid #145a32; }
+        .btn-lose { background: linear-gradient(to bottom, #e74c3c, #c0392b); color: white; border-bottom: 4px solid #7b241c; }
+        .btn-reset { background: #34495e; color: #ecf0f1; font-size: 12px; }
 
-        .btn-lose { 
-            background: linear-gradient(45deg, #c0392b, #e74c3c); 
-            color: white;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-        }
-        .btn-lose:hover { box-shadow: 0 0 20px rgba(231, 76, 60, 0.6); background: #e74c3c; }
-
-        .btn-reset { 
-            background: #2c3e50; 
-            color: #bdc3c7;
-            font-size: 11px;
-        }
-        .btn-reset:hover { background: #34495e; color: white; }
-
+        /* Admin modundayken scoreboard'u biraz yukarı çekelim butonlar alanı kapatmasın */
+        body.admin-mode .container { transform: translateY(-50px); }
+        body.admin-mode #admin-controls { display: flex; }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <div class="container">
         <img src="skortb.png" class="bg-img">
@@ -106,12 +90,50 @@
         <div id="away-name" class="text">LOSE</div>
     </div>
 
-    <div class="admin-panel">
-        <span>KONTROL:</span>
+    <div id="admin-controls">
         <button class="btn-win" onclick="updateScore('evSkor', 1)">WIN +1</button>
         <button class="btn-lose" onclick="updateScore('depSkor', 1)">LOSE +1</button>
         <button class="btn-reset" onclick="resetScores()">SIFIRLA</button>
     </div>
 
     <script type="module">
-        import { initializeApp
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+            databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const scoreRef = ref(db, 'skorlar');
+
+        // URL Kontrolü: Admin modu mu?
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('mode') === 'admin') {
+            document.getElementById('main-body').classList.add('admin-mode');
+        }
+
+        // Skorları Dinle (İki sekmede de çalışır)
+        onValue(scoreRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('score').innerText = `${data.evSkor || 0} - ${data.depSkor || 0}`;
+            }
+        });
+
+        // Skor Arttırma (Sadece Admin Sekmesinde Tetiklenir)
+        window.updateScore = (type, amount) => {
+            const specificRef = ref(db, `skorlar/${type}`);
+            runTransaction(specificRef, (val) => (val || 0) + amount);
+        };
+
+        // Resetleme (Sadece Admin Sekmesinde Tetiklenir)
+        window.resetScores = () => {
+            if(confirm("Tüm skorlar sıfırlanacak, emin misin?")) {
+                set(scoreRef, { evSahibi: "WIN", deplasman: "LOSE", evSkor: 0, depSkor: 0 });
+            }
+        };
+    </script>
+</body>
+</html>
