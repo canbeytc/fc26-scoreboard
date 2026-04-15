@@ -2,113 +2,147 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Ultra Gold Scoreboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC26 Live Scoreboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         /* TEMEL AYARLAR */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; color: white; }
+        body { 
+            background: transparent; 
+            font-family: 'Anton', sans-serif; 
+            overflow: hidden; 
+            color: white;
+        }
 
-        #overlayUI { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #overlayUI { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+        }
 
-        /* ANA TABELA: Senin bg.png dosyanı buraya gömüyoruz */
+        /* TABELA ANA KUTUSU */
         .board { 
             position: relative;
-            width: 700px; /* Görselin genişliğine göre ayarla */
-            height: 180px; /* Görselin yüksekliğine göre ayarla */
-            background: url('bg.png') no-repeat center center;
-            background-size: contain; /* Görseli kutuya sığdır */
+            width: 800px;
+            height: 250px;
+            /* Önemli: GitHub'daki dosya adın bp.png olduğu için tam bu ismi kullanıyoruz */
+            background: url('./bp.png') no-repeat center center;
+            background-size: contain;
             display: flex;
             align-items: center;
             justify-content: center;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
         }
 
-        /* Skorları hizalamak için görünmez kutular */
-        .score-wrapper {
+        /* Skorları kalkanın yanındaki boşluklara hizalar */
+        .score-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            height: 100%;
-            padding: 0 90px; /* Sayıları tam kalkanın yanındaki boşluklara oturtmak için ayarla */
-            margin-top: 15px; /* Sayıları kalkanın altına hizalamak için */
+            padding: 0 115px; /* Sayıları kalkanın dışına itmek için burayı kullan */
+            margin-top: 15px; /* Sayıları yukarı/aşağı oynatmak için burayı kullan */
         }
 
-        .panel { 
-            width: 120px;
-            text-align: center;
-        }
-
-        /* SKOR SAYILARI (Orijinal Font) */
         .score { 
-            font-size: 90px; /* Çok büyük sayılar */
+            font-size: 110px; 
+            color: #ffffff;
+            text-shadow: 3px 5px 15px rgba(0,0,0,1); /* Sayıların okunması için güçlü gölge */
+            width: 130px;
+            text-align: center;
             line-height: 1;
-            text-shadow: 4px 4px 10px rgba(0,0,0,0.9);
-            color: #fff;
         }
 
-        /* ADMIN PANELİ (Aynı Kalıyor) */
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 20px; padding: 20px; }
-        .btn { width: 100%; max-width: 400px; padding: 25px; font-size: 28px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; color: white; text-transform: uppercase; }
-        .btn-w { background: #1e7020; }
-        .btn-l { background: #7a1a1a; }
-        .btn-s { background: #333; font-size: 16px; margin-top: 10px; }
+        /* Ortadaki kalkanın üzerine sayı binmemesi için görünmez boşluk */
+        .spacer { 
+            width: 140px; 
+        }
+
+        /* ADMIN PANELİ (Sadece mode=admin ile açılır) */
+        #adminUI { 
+            display: none; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            background: #0a0a0a; 
+            gap: 20px; 
+        }
+        .btn { 
+            width: 350px; 
+            padding: 25px; 
+            font-size: 30px; 
+            font-family: 'Anton'; 
+            border: none; 
+            border-radius: 15px; 
+            cursor: pointer; 
+            color: white; 
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #000;
+        }
+        .btn-win { background: linear-gradient(180deg, #2ecc71, #27ae60); }
+        .btn-loss { background: linear-gradient(180deg, #e74c3c, #c0392b); }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
     <div class="board">
-        <div class="score-wrapper">
-            <div class="panel">
-                <span class="score" id="wScore">0</span>
-            </div>
-            <div style="width: 150px;"></div>
-            <div class="panel">
-                <span class="score" id="lScore">0</span>
-            </div>
+        <div class="score-container">
+            <span class="score" id="wins">0</span>
+            
+            <div class="spacer"></div>
+            
+            <span class="score" id="losses">0</span>
         </div>
     </div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color:#d4af37; margin-bottom:10px;">FC26 KUMANDA</h1>
-    <button class="btn btn-w" onclick="update('wins', 1)">WINS +1</button>
-    <button class="btn btn-l" onclick="update('losses', 1)">LOSS +1</button>
-    <button class="btn btn-s" onclick="reset()">SIFIRLA</button>
+    <h1 style="color: #d4af37; letter-spacing: 2px; margin-bottom: 10px;">FC26 SCORE CONTROL</h1>
+    <button class="btn btn-win" onclick="updateScore('wins', 1)">GALİBİYET +1</button>
+    <button class="btn btn-loss" onclick="updateScore('losses', 1)">MAĞLUBİYET +1</button>
+    <button onclick="resetAll()" style="background:none; border:1px solid #444; color:#666; margin-top:20px; padding:10px; cursor:pointer;">Sıfırla</button>
 </div>
 
 <script>
-    // FİRBASE AYARLARI
+    // FİRBASE BAĞLANTISI (Senin veritabanın)
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const DB_PATH = 'fc26_data'; 
+    const DATA_PATH = 'fc26_stats'; // Veritabanındaki klasör adın
 
     // MOD KONTROLÜ
-    if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
         document.body.style.background = "#0a0a0a";
     }
 
-    // VERİ DİNLEME (TABELAYI GÜNCELLE)
-    db.ref(DB_PATH).on('value', (s) => {
-        const d = s.val() || { wins: 0, losses: 0 };
-        document.getElementById('wScore').innerText = d.wins;
-        document.getElementById('lScore').innerText = d.losses;
+    // VERİLERİ CANLI DİNLE VE EKRANA YAZ
+    db.ref(DATA_PATH).on('value', (snapshot) => {
+        const data = snapshot.val() || { wins: 0, losses: 0 };
+        document.getElementById('wins').innerText = data.wins;
+        document.getElementById('losses').innerText = data.losses;
     });
 
-    // VERİ YAZMA (BUTONLAR)
-    function update(f, v) {
-        db.ref(DB_PATH + '/' + f).transaction(c => Math.max(0, (c || 0) + v));
+    // SKOR GÜNCELLEME FONKSİYONU
+    function updateScore(field, value) {
+        db.ref(DATA_PATH + '/' + field).transaction((current) => {
+            return (current || 0) + value;
+        });
     }
 
-    function reset() {
-        if(confirm('Tüm skorlar sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+    // SIFIRLAMA
+    function resetAll() {
+        if(confirm("Tüm skorlar silinsin mi?")) {
+            db.ref(DATA_PATH).set({ wins: 0, losses: 0 });
+        }
     }
 </script>
 </body>
