@@ -2,71 +2,71 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Milimetrik Ayar</title>
+    <title>FC26 Scoreboard - Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; }
-
-        #overlayUI { 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
+        body { 
+            background: transparent; 
+            font-family: 'Anton', sans-serif; 
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
-        .board { 
+        .container {
             position: relative;
-            width: 1000px; /* Görselin genişliğini buraya sabitledik */
-            height: 500px;
-            background: url('./bp.jpg?v=20') no-repeat center center;
+            width: 1000px; /* Görsel genişliği */
+            height: 450px; /* Görsel yüksekliği */
+            background: url('bp.jpg') no-repeat center center;
             background-size: contain;
         }
 
         .score { 
             position: absolute;
-            top: 50%;
+            top: 48%; /* Dikey hizalama */
             transform: translateY(-50%);
             font-size: 130px; 
             color: #ffffff;
-            text-shadow: 0 0 25px rgba(255, 174, 0, 0.7), 4px 4px 10px rgba(0,0,0,0.8);
-            width: 160px;
+            text-shadow: 0 0 20px rgba(255, 174, 0, 0.7), 4px 4px 10px rgba(0,0,0,0.8);
+            width: 180px;
             text-align: center;
         }
 
-        /* SOL SKOR AYARI - Eğer kutuya oturmazsa 'left' değerini değiştir */
+        /* SOL SKOR - Yerini buradan ayarla */
         #wins { 
-            left: 110px; 
+            left: 105px; 
         }
 
-        /* SAĞ SKOR AYARI - Eğer kutuya oturmazsa 'right' değerini değiştir */
+        /* SAĞ SKOR - Yerini buradan ayarla */
         #losses { 
-            right: 110px; 
+            right: 105px; 
         }
 
-        /* ADMIN PANELİ */
         #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 20px; }
-        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; box-shadow: 0 5px 0 #000; }
-        .btn-w { background: linear-gradient(180deg, #d4af37, #aa8a2e); }
-        .btn-l { background: linear-gradient(180deg, #c0392b, #962d22); }
+        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; }
+        .btn-w { background: #d4af37; }
+        .btn-l { background: #c0392b; }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
-    <div class="board">
+    <div class="container">
         <span class="score" id="wins">0</span>
         <span class="score" id="losses">0</span>
     </div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color: gold; margin-bottom: 20px;">FC26 PANEL</h1>
+    <h1 style="color: gold;">FC26 ADMIN</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="res()" style="background:none; border:1px solid #444; color:#666; cursor:pointer; padding:10px; margin-top:30px;">Sıfırla</button>
+    <button onclick="res()" style="color: grey; background: none; border: none; margin-top: 20px; cursor: pointer;">Skorları Sıfırla</button>
 </div>
 
 <script>
