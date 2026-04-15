@@ -2,85 +2,35 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 TikTok Scoreboard</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: transparent; /* Yayın için şeffaf arka plan */
-            font-family: 'Arial Black', sans-serif; /* Daha okunaklı, kalın bir font */
-        }
+        body { margin: 0; background-color: transparent; overflow: hidden; font-family: sans-serif; }
+        .container { position: relative; width: 1000px; height: 400px; margin: auto; }
+        
+        /* Arka plan görseli - GitHub Pages üzerinde tam yol vermek daha iyidir */
+        .bg { width: 100%; }
 
-        .scoreboard-container {
-            position: relative;
-            width: 1000px; /* Tasarım genişliği */
-            height: 400px;
-            margin: 20px auto;
-        }
-
-        .bg-image {
-            width: 100%;
-            display: block;
-            /* Hafif gölge vererek yayında öne çıkmasını sağlarız */
-            filter: drop-shadow(0px 0px 10px rgba(0,0,0,0.5));
-        }
-
-        .overlay-text {
-            position: absolute;
-            color: #FFFFFF;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,1);
-        }
-
-        /* Sol Takım İsmi/Kısaltması */
-        #home-name {
-            top: 45px;
-            left: 110px;
-            width: 220px;
-            height: 100px;
-            font-size: 32px;
-        }
-
-        /* Sağ Takım İsmi/Kısaltması */
-        #away-name {
-            top: 45px;
-            right: 110px;
-            width: 220px;
-            height: 100px;
-            font-size: 32px;
-        }
-
-        /* Skor Alanı (FC26 logosunun hemen altı veya üstü için) */
-        #score {
-            top: 155px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            font-size: 54px;
-            color: #FFD700; /* Altın sarısı */
-            font-weight: 900;
-        }
+        .text { position: absolute; color: white; font-weight: bold; text-shadow: 2px 2px 5px #000; }
+        
+        /* Konumları görseline göre buradan ayarla */
+        #home-name { top: 65px; left: 130px; font-size: 28px; width: 180px; text-align: center; }
+        #away-name { top: 65px; right: 130px; font-size: 28px; width: 180px; text-align: center; }
+        #score { top: 125px; left: 50%; transform: translateX(-50%); font-size: 60px; color: #ffcc00; }
     </style>
 </head>
 <body>
 
-    <div class="scoreboard-container">
-        <img src="skortb.png" class="bg-image">
+    <div class="container">
+        <img src="skortb.png" class="bg">
         
-        <div id="home-name" class="overlay-text">EV SAHİBİ</div>
-        <div id="score" class="overlay-text">0 - 0</div>
-        <div id="away-name" class="overlay-text">DEPLASMAN</div>
+        <div id="home-name" class="text">YÜKLENİYOR...</div>
+        <div id="score" class="text">0 - 0</div>
+        <div id="away-name" class="text">YÜKLENİYOR...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Firebase Ayarların (Realtime Database ekranındaki URL'yi kullanıyoruz)
         const firebaseConfig = {
             databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app"
         };
@@ -88,14 +38,16 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Firebase'deki 'skorlar' veya 'skorlar_live' düğümünü dinle
+        // Firebase'deki 'skorlar' düğümünü dinle
         const scoreRef = ref(db, 'skorlar'); 
         onValue(scoreRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
+                // EĞER FIREBASE'DEKİ İSİMLER FARKLIYSA BURAYI DÜZELT:
+                // Örneğin Firebase'de "ev_sahibi" yazıyorsa data.ev_sahibi yapmalısın.
                 document.getElementById('home-name').innerText = data.evSahibi || "EV";
                 document.getElementById('away-name').innerText = data.deplasman || "DEP";
-                document.getElementById('score').innerText = `${data.evSkor} - ${data.depSkor}`;
+                document.getElementById('score').innerText = (data.evSkor ?? 0) + " - " + (data.depSkor ?? 0);
             }
         });
     </script>
