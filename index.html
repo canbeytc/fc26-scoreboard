@@ -2,17 +2,13 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>FC26 Scoreboard - Pro Final</title>
+    <title>FC26 Scoreboard - Milimetrik Ayar</title>
     <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            background: transparent; 
-            font-family: 'Anton', sans-serif; 
-            overflow: hidden; 
-        }
+        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; }
 
         #overlayUI { 
             display: flex; 
@@ -23,95 +19,80 @@
 
         .board { 
             position: relative;
-            width: 900px; /* Görsel boyutuna göre optimize edildi */
-            height: 400px;
-            /* Dosya adın bp.jpg olduğu için tam bu ismi kullanıyoruz */
-            background: url('./bp.jpg?v=10') no-repeat center center;
+            width: 1000px; /* Görselin genişliğini buraya sabitledik */
+            height: 500px;
+            background: url('./bp.jpg?v=20') no-repeat center center;
             background-size: contain;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Sayıları tam o siyah karelerin içine hizalar */
-        .score-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 0 105px; /* Sayıları yatayda tam boşluklara iter */
-            margin-top: 10px; /* Dikeyde ortalar */
         }
 
         .score { 
-            font-size: 130px; /* Sayılar artık çok daha büyük */
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 130px; 
             color: #ffffff;
-            /* Altın/Bronz tema ile uyumlu hafif bir parlama */
-            text-shadow: 0 0 20px rgba(255, 174, 0, 0.8), 4px 4px 10px rgba(0,0,0,0.5);
-            width: 150px;
+            text-shadow: 0 0 25px rgba(255, 174, 0, 0.7), 4px 4px 10px rgba(0,0,0,0.8);
+            width: 160px;
             text-align: center;
-            line-height: 1;
         }
 
-        .spacer { width: 220px; } /* Ortadaki FC26 logosunu boş bırakır */
+        /* SOL SKOR AYARI - Eğer kutuya oturmazsa 'left' değerini değiştir */
+        #wins { 
+            left: 110px; 
+        }
 
-        /* ADMIN PANELİ STİLLERİ */
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0f0f0f; gap: 20px; }
-        .btn { width: 320px; padding: 25px; font-size: 35px; cursor: pointer; border-radius: 20px; border: none; color: white; font-family: 'Anton'; text-transform: uppercase; box-shadow: 0 6px 0 #000; transition: 0.1s; }
-        .btn-w { background: linear-gradient(180deg, #d4af37, #aa8a2e); } /* Altın rengi galibiyet */
-        .btn-l { background: linear-gradient(180deg, #c0392b, #962d22); } /* Kırmızı mağlubiyet */
-        .btn:active { transform: translateY(4px); box-shadow: none; }
+        /* SAĞ SKOR AYARI - Eğer kutuya oturmazsa 'right' değerini değiştir */
+        #losses { 
+            right: 110px; 
+        }
+
+        /* ADMIN PANELİ */
+        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 20px; }
+        .btn { width: 300px; padding: 25px; font-size: 30px; cursor: pointer; border-radius: 15px; border: none; color: white; font-family: 'Anton'; box-shadow: 0 5px 0 #000; }
+        .btn-w { background: linear-gradient(180deg, #d4af37, #aa8a2e); }
+        .btn-l { background: linear-gradient(180deg, #c0392b, #962d22); }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
     <div class="board">
-        <div class="score-container">
-            <span class="score" id="wins">0</span>
-            <div class="spacer"></div>
-            <span class="score" id="losses">0</span>
-        </div>
+        <span class="score" id="wins">0</span>
+        <span class="score" id="losses">0</span>
     </div>
 </div>
 
 <div id="adminUI">
-    <h1 style="color: #d4af37; margin-bottom: 20px; font-size: 40px;">FC26 PANEL</h1>
+    <h1 style="color: gold; margin-bottom: 20px;">FC26 PANEL</h1>
     <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button onclick="res()" style="background:none; border:1px solid #444; color:#666; cursor:pointer; padding:10px; margin-top:30px; border-radius:10px;">Skorları Sıfırla</button>
+    <button onclick="res()" style="background:none; border:1px solid #444; color:#666; cursor:pointer; padding:10px; margin-top:30px;">Sıfırla</button>
 </div>
 
 <script>
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    
     const DB_PATH = 'fc26_data'; 
 
-    // CANLI VERİ OKUMA
     db.ref(DB_PATH).on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wins').innerText = d.wins;
         document.getElementById('losses').innerText = d.losses;
     });
 
-    // VERİ GÜNCELLEME
     function update(field, val) {
         db.ref(DB_PATH + '/' + field).transaction(current => (current || 0) + val);
     }
 
     function res() {
-        if(confirm('Skorlar sıfırlansın mı?')) {
-            db.ref(DB_PATH).set({ wins: 0, losses: 0 });
-        }
+        if(confirm('Sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
     }
 
-    // MOD KONTROLÜ
     if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#0f0f0f";
+        document.body.style.background = "#0a0a0a";
     }
 </script>
 </body>
