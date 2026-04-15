@@ -3,89 +3,106 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FC26 FUT Champions Scoreboard</title>
+<title>FC26 Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700;900&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
-  /* SENİN TÜM CSS TASARIMIN BURADA (AYNEN KORUNDU) */
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { background: transparent; width: 100%; height: 100%; overflow: hidden; font-family: 'Oswald', sans-serif; }
-  .container { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 10px; }
-  .board { position: relative; display: flex; align-items: stretch; height: 62px; filter: drop-shadow(0 6px 24px rgba(0,0,0,0.75)); user-select: none; }
-  .panel-left { background: linear-gradient(180deg, #1e7020 0%, #155016 100%); display: flex; align-items: center; justify-content: center; width: 100px; clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%); border-radius: 10px 0 0 10px; padding-right: 14px; cursor: pointer; transition: filter 0.15s; }
-  .panel-right { background: linear-gradient(180deg, #2b4e10 0%, #1e3a0a 100%); display: flex; align-items: center; justify-content: center; width: 100px; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); border-radius: 0 10px 10px 0; padding-left: 14px; cursor: pointer; transition: filter 0.15s; }
-  .score { font-size: 50px; font-weight: 900; color: #ffffff; line-height: 1; letter-spacing: -2px; text-shadow: 0 3px 10px rgba(0,0,0,0.5); }
-  .center-badge { width: 72px; display: flex; align-items: center; justify-content: center; margin: 0 -4px; cursor: pointer; z-index: 20; }
-  .badge-inner { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #ffe566 0%, #d4a020 40%, #9a7010 75%, #6a4c08 100%); border: 3.5px solid #b08820; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .badge-fut { font-size: 11.5px; font-weight: 900; color: #3a2000; letter-spacing: 2px; }
-  .badge-champs { font-size: 5.5px; font-weight: 700; color: #5a3800; }
+  body { background: #111; font-family: 'Oswald', sans-serif; color: white; }
+
+  /* SCOREBOARD GÖRÜNÜMÜ (Normal modda çalışır) */
+  #overlayUI { display: flex; align-items: center; justify-content: center; height: 100vh; }
+  .board { display: flex; height: 70px; filter: drop-shadow(0 6px 20px #000); }
+  .panel-left { background: linear-gradient(180deg, #1e7020 0%, #155016 100%); width: 110px; clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%); display: flex; align-items: center; justify-content: center; border-radius: 10px 0 0 10px; }
+  .panel-right { background: linear-gradient(180deg, #2b4e10 0%, #1e3a0a 100%); width: 110px; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); display: flex; align-items: center; justify-content: center; border-radius: 0 10px 10px 0; }
+  .score { font-size: 50px; font-weight: 900; }
+  .badge { width: 80px; height: 80px; border-radius: 50%; background: radial-gradient(circle, #ffe566, #9a7010); border: 4px solid #b08820; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 -5px; z-index: 10; }
+
+  /* ADMIN PANELİ (Kumanda modu - Tıklanabilir alanları büyüttük) */
+  #adminUI { 
+    display: none; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 20px; 
+    height: 100vh; 
+    width: 100%;
+    padding: 20px;
+    position: relative;
+    z-index: 9999; /* En üstte olmasını sağlar */
+  }
+
+  .admin-btn { 
+    width: 100%; 
+    max-width: 400px; 
+    padding: 30px; 
+    font-size: 28px; 
+    font-weight: 900; 
+    border: none; 
+    border-radius: 15px; 
+    cursor: pointer; 
+    text-transform: uppercase;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    display: block; /* Tıklanabilirliği garanti eder */
+  }
+
+  .btn-w { background: #1e7020; color: white; }
+  .btn-l { background: #7a1a1a; color: white; }
+  .btn-reset { background: #444; color: #ccc; padding: 15px; font-size: 16px; }
   
-  /* Admin Paneli (Sadece ?mode=admin linkinde açılır) */
-  #adminUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 100; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
-  .admin-btn { padding: 15px; width: 80%; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; color: white; cursor: pointer; }
-  .btn-w { background: #1e7020; }
-  .btn-l { background: #7a1a1a; }
-  
-  /* Animasyonlar */
-  .bounce { animation: numBounce 0.4s ease; }
-  @keyframes numBounce { 0% { transform: scale(1); } 30% { transform: scale(1.3); } 100% { transform: scale(1); } }
+  .btn-w:active, .btn-l:active { transform: scale(0.95); }
 </style>
 </head>
 <body>
 
-<div class="container" id="overlayUI">
+<div id="overlayUI">
   <div class="board">
-    <div class="panel-left" onclick="sendUpdate('wins', 1)"><span class="score" id="wScore">0</span></div>
-    <div class="center-badge" onclick="resetAll()"><div class="badge-inner"><span class="badge-fut">FUT</span><span class="badge-champs">CHAMPIONS</span></div></div>
-    <div class="panel-right" onclick="sendUpdate('losses', 1)"><span class="score" id="lScore">0</span></div>
+    <div class="panel-left"><span class="score" id="wScore">0</span></div>
+    <div class="badge"><span style="font-size:12px; color:#3a2000; font-weight:900;">FC26</span></div>
+    <div class="panel-right"><span class="score" id="lScore">0</span></div>
   </div>
 </div>
 
 <div id="adminUI">
-    <h2 style="color:white; margin-bottom:20px;">FC26 KONTROL PANELİ</h2>
+    <h2 style="margin-bottom:10px;">FC26 KUMANDA PANELİ</h2>
     <button class="admin-btn btn-w" onclick="sendUpdate('wins', 1)">GALİBİYET +1</button>
-    <button class="admin-btn btn-w" onclick="sendUpdate('wins', -1)" style="opacity:0.5">WINS -1</button>
+    <button class="admin-btn btn-w" style="opacity:0.6; padding:10px; font-size:16px;" onclick="sendUpdate('wins', -1)">WINS -1 (Hata Düzelt)</button>
     <button class="admin-btn btn-l" onclick="sendUpdate('losses', 1)">MAĞLUBİYET +1</button>
-    <button class="admin-btn btn-l" onclick="sendUpdate('losses', -1)" style="opacity:0.5">LOSSES -1</button>
-    <button class="admin-btn" style="background:#444" onclick="resetAll()">SIFIRLA</button>
+    <button class="admin-btn btn-l" style="opacity:0.6; padding:10px; font-size:16px;" onclick="sendUpdate('losses', -1)">LOSSES -1 (Hata Düzelt)</button>
+    <button class="admin-btn btn-reset" onclick="resetAll()">SKORLARI SIFIRLA</button>
 </div>
 
 <script>
-  // BURAYI KENDİ LİNKİNLE DEĞİŞTİR
-  const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app
-" };
+  // FIREBASE BAĞLANTISI (Linkini buraya yapıştır)
+  const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // Mod Seçimi
+  // URL Kontrolü
   const mode = new URLSearchParams(window.location.search).get('mode');
   if (mode === 'admin') {
       document.getElementById('adminUI').style.display = 'flex';
       document.getElementById('overlayUI').style.display = 'none';
-      document.body.style.background = "#111";
   }
 
-  // Veritabanını Dinle (Sayılar değiştikçe TikTok'taki tabela anında güncellenir)
-  db.ref('scores').on('value', (snapshot) => {
-    const data = snapshot.val() || { wins: 0, losses: 0 };
+  // Veri Dinleme
+  db.ref('fc26_data').on('value', (snap) => {
+    const data = snap.val() || { wins: 0, losses: 0 };
     document.getElementById('wScore').innerText = data.wins;
     document.getElementById('lScore').innerText = data.losses;
-    // Animasyon ekle
-    document.getElementById('wScore').classList.add('bounce');
-    setTimeout(() => document.getElementById('wScore').classList.remove('bounce'), 400);
   });
 
-  // Skor Güncelleme
+  // Veri Gönderme
   function sendUpdate(field, val) {
-    db.ref('scores/' + field).transaction((current) => {
+    db.ref('fc26_data/' + field).transaction((current) => {
       return Math.max(0, (current || 0) + val);
     });
   }
 
   function resetAll() {
     if(confirm('Skorlar sıfırlansın mı?')) {
-        db.ref('scores').set({ wins: 0, losses: 0 });
+        db.ref('fc26_data').set({ wins: 0, losses: 0 });
     }
   }
 </script>
