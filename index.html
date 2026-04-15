@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        body { margin: 0; background-color: transparent; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; background-color: transparent; overflow: hidden; font-family: 'Arial Black', sans-serif; }
         .container { position: relative; width: 1000px; height: 400px; margin: auto; }
+        .bg-img { width: 100%; display: block; }
         
-        /* Arka plan görseli - GitHub Pages üzerinde tam yol vermek daha iyidir */
-        .bg { width: 100%; }
+        .text { position: absolute; color: white; font-weight: 900; text-transform: uppercase; text-shadow: 3px 3px 6px #000; display: flex; justify-content: center; align-items: center; }
+        
+        #home-name { top: 68px; left: 115px; width: 220px; font-size: 26px; }
+        #away-name { top: 68px; right: 115px; width: 220px; font-size: 26px; }
+        #score { top: 155px; left: 50%; transform: translateX(-50%); font-size: 55px; color: #FFD700; letter-spacing: 5px; }
 
-        .text { position: absolute; color: white; font-weight: bold; text-shadow: 2px 2px 5px #000; }
-        
-        /* Konumları görseline göre buradan ayarla */
-        #home-name { top: 65px; left: 130px; font-size: 28px; width: 180px; text-align: center; }
-        #away-name { top: 65px; right: 130px; font-size: 28px; width: 180px; text-align: center; }
-        #score { top: 125px; left: 50%; transform: translateX(-50%); font-size: 60px; color: #ffcc00; }
+        /* Admin Paneli - Sadece sen göreceksin, yayında gizlemek için OBS'de altını kırpabilirsin */
+        .admin-panel {
+            position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; display: flex; gap: 10px; z-index: 999;
+        }
+        button { padding: 10px 20px; cursor: pointer; font-weight: bold; border: none; border-radius: 5px; }
+        .btn-win { background: #27ae60; color: white; }
+        .btn-lose { background: #c0392b; color: white; }
+        .btn-reset { background: #7f8c8d; color: white; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <img src="skortb.png" class="bg">
-        
-        <div id="home-name" class="text">YÜKLENİYOR...</div>
+        <img src="skortb.png" class="bg-img">
+        <div id="home-name" class="text">WIN</div>
         <div id="score" class="text">0 - 0</div>
-        <div id="away-name" class="text">YÜKLENİYOR...</div>
+        <div id="away-name" class="text">LOSE</div>
+    </div>
+
+    <div class="admin-panel" id="controls">
+        <button class="btn-win" onclick="updateScore('evSkor', 1)">WIN +1</button>
+        <button class="btn-lose" onclick="updateScore('depSkor', 1)">LOSE +1</button>
+        <button class="btn-reset" onclick="resetScores()">SIFIRLA</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app"
@@ -37,19 +49,33 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const scoreRef = ref(db, 'skorlar');
 
-        // Firebase'deki 'skorlar' düğümünü dinle
-        const scoreRef = ref(db, 'skorlar'); 
+        // Verileri Dinle ve Ekrana Yaz
         onValue(scoreRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                // EĞER FIREBASE'DEKİ İSİMLER FARKLIYSA BURAYI DÜZELT:
-                // Örneğin Firebase'de "ev_sahibi" yazıyorsa data.ev_sahibi yapmalısın.
-                document.getElementById('home-name').innerText = data.evSahibi || "EV";
-                document.getElementById('away-name').innerText = data.deplasman || "DEP";
-                document.getElementById('score').innerText = (data.evSkor ?? 0) + " - " + (data.depSkor ?? 0);
+                document.getElementById('score').innerText = `${data.evSkor || 0} - ${data.depSkor || 0}`;
             }
         });
+
+        // Skor Güncelleme Fonksiyonu
+        window.updateScore = (type, amount) => {
+            const specificRef = ref(db, `skorlar/${type}`);
+            runTransaction(specificRef, (currentValue) => {
+                return (currentValue || 0) + amount;
+            });
+        };
+
+        // Sıfırlama Fonksiyonu
+        window.resetScores = () => {
+            set(scoreRef, {
+                evSahibi: "WIN",
+                deplasman: "LOSE",
+                evSkor: 0,
+                depSkor: 0
+            });
+        };
     </script>
 </body>
 </html>
