@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FC26 Scoreboard & Admin</title>
+    <title>FC26 Scoreboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700;900&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -16,13 +16,13 @@
         .p-left { background: linear-gradient(180deg, #1e7020 0%, #155016 100%); clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%); border-radius: 10px 0 0 10px; }
         .p-right { background: linear-gradient(180deg, #2b4e10 0%, #1e3a0a 100%); clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); border-radius: 0 10px 10px 0; }
         .score { font-size: 45px; font-weight: 900; }
-        .badge { width: 75px; height: 75px; border-radius: 50%; background: radial-gradient(circle, #ffe566, #9a7010); border: 4px solid #b08820; z-index: 10; margin: 0 -5px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #3a2000; font-weight: 900; font-size: 14px; }
+        .badge { width: 75px; height: 75px; border-radius: 50%; background: radial-gradient(circle, #ffe566, #9a7010); border: 4px solid #b08820; z-index: 10; margin: 0 -5px; display: flex; align-items: center; justify-content: center; color: #3a2000; font-weight: 900; font-size: 14px; }
         
         #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #111; color: white; gap: 15px; padding: 20px; }
-        .btn { width: 100%; max-width: 350px; padding: 25px; font-size: 24px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; text-transform: uppercase; }
+        .btn { width: 100%; max-width: 350px; padding: 20px; font-size: 22px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; text-transform: uppercase; }
         .btn-w { background: #1e7020; }
         .btn-l { background: #7a1a1a; }
-        .btn-s { background: #444; padding: 10px; font-size: 14px; margin-top: 10px; }
+        .btn-s { background: #555; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -36,12 +36,12 @@
 </div>
 
 <div id="adminUI">
-    <h1>FC26 KUMANDA</h1>
+    <h2 id="statusText">FC26 KUMANDA</h2>
     <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-w" style="opacity:0.5; font-size:16px; padding:10px;" onclick="update('wins', -1)">WINS -1</button>
+    <button class="btn btn-w" style="opacity:0.5; font-size:14px; padding:10px;" onclick="update('wins', -1)">WINS -1</button>
     <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button class="btn btn-l" style="opacity:0.5; font-size:16px; padding:10px;" onclick="update('losses', -1)">LOSSES -1</button>
-    <button class="btn btn-s" onclick="reset()">SIFIRLA</button>
+    <button class="btn btn-l" style="opacity:0.5; font-size:14px; padding:10px;" onclick="update('losses', -1)">LOSSES -1</button>
+    <button class="btn btn-s" onclick="reset()">HER ŞEYİ SIFIRLA</button>
 </div>
 
 <script>
@@ -49,7 +49,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ÖNEMLİ: Ekran görüntündeki çalışan isimle eşitledik
+    // Senin ekran görüntünde çalışan klasör buydu
     const DB_PATH = 'fc26_data'; 
 
     const mode = new URLSearchParams(window.location.search).get('mode');
@@ -57,6 +57,7 @@
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
         document.body.style.background = "#111";
+        document.body.style.overflow = "auto";
     }
 
     // VERİ DİNLEME
@@ -68,11 +69,19 @@
 
     // VERİ GÜNCELLEME
     function update(f, v) {
-        db.ref(DB_PATH + '/' + f).transaction(c => Math.max(0, (c || 0) + v));
+        db.ref(DB_PATH + '/' + f).transaction(c => {
+            const newValue = Math.max(0, (c || 0) + v);
+            console.log("Güncelleniyor:", f, newValue);
+            return newValue;
+        });
     }
 
     function reset() {
-        if(confirm('Sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+        if(confirm('Tüm skorlar sıfırlansın mı?')) {
+            // Hem ana klasörü hem de varsa diğerlerini temizle
+            db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+            db.ref('live_scores').set({ wins: 0, losses: 0 });
+        }
     }
 </script>
 </body>
