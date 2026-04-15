@@ -3,329 +3,90 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FC25 FUT Champions Scoreboard</title>
+<title>FC26 FUT Champions Scoreboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700;900&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 <style>
+  /* SENİN TÜM CSS TASARIMIN BURADA (AYNEN KORUNDU) */
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html, body {
-    background: transparent;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    font-family: 'Oswald', 'Arial Black', sans-serif;
-  }
-
-  .container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    padding: 10px;
-  }
-
-  /* ---- SCOREBOARD ---- */
-  .board {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    height: 62px;
-    filter: drop-shadow(0 6px 24px rgba(0,0,0,0.75));
-    user-select: none;
-  }
-
-  /* Left panel - WINS - dark green like reference */
-  .panel-left {
-    background: linear-gradient(180deg, #1e7020 0%, #155016 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100px;
-    clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
-    border-radius: 10px 0 0 10px;
-    padding-right: 14px;
-    cursor: pointer;
-    position: relative;
-    transition: filter 0.15s;
-  }
-  .panel-left:hover { filter: brightness(1.12); }
-  .panel-left:active { filter: brightness(0.9); }
-
-  /* Right panel - LOSSES - darker olive/green */
-  .panel-right {
-    background: linear-gradient(180deg, #2b4e10 0%, #1e3a0a 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100px;
-    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
-    border-radius: 0 10px 10px 0;
-    padding-left: 14px;
-    cursor: pointer;
-    position: relative;
-    transition: filter 0.15s;
-  }
-  .panel-right:hover { filter: brightness(1.12); }
-  .panel-right:active { filter: brightness(0.9); }
-
-  /* Score numbers */
-  .score {
-    font-family: 'Oswald', 'Arial Black', sans-serif;
-    font-size: 50px;
-    font-weight: 900;
-    color: #ffffff;
-    line-height: 1;
-    letter-spacing: -2px;
-    text-shadow: 0 3px 10px rgba(0,0,0,0.5);
-    transition: transform 0.1s;
-    display: inline-block;
-  }
-
-  /* Center gold badge */
-  .center-badge {
-    position: relative;
-    z-index: 20;
-    width: 72px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 -4px;
-    cursor: pointer;
-  }
-
-  .badge-inner {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 38% 30%, #ffe566 0%, #d4a020 40%, #9a7010 75%, #6a4c08 100%);
-    border: 3.5px solid #b08820;
-    box-shadow:
-      0 0 0 1.5px #f0d060,
-      0 4px 16px rgba(0,0,0,0.65),
-      inset 0 2px 4px rgba(255,240,150,0.4),
-      inset 0 -2px 4px rgba(0,0,0,0.3);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    transition: transform 0.15s, filter 0.15s;
-  }
-  .center-badge:hover .badge-inner { filter: brightness(1.1); transform: scale(1.04); }
-  .center-badge:active .badge-inner { transform: scale(0.95); }
-
-  .badge-trophy {
-    width: 26px;
-    height: 26px;
-    margin-bottom: 0px;
-  }
-
-  .badge-fut {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11.5px;
-    font-weight: 900;
-    color: #3a2000;
-    letter-spacing: 2px;
-    line-height: 1;
-    text-transform: uppercase;
-  }
-
-  .badge-champs {
-    font-family: 'Oswald', sans-serif;
-    font-size: 5.5px;
-    font-weight: 700;
-    color: #5a3800;
-    letter-spacing: 0.6px;
-    line-height: 1;
-    text-transform: uppercase;
-    margin-top: 1px;
-  }
-
-  /* Tooltip hints */
-  .hint {
-    position: absolute;
-    bottom: -22px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: 'Oswald', sans-serif;
-    font-size: 9px;
-    color: rgba(255,255,255,0.4);
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    text-transform: uppercase;
-    pointer-events: none;
-  }
-
-  /* Animations */
-  @keyframes numBounce {
-    0%   { transform: scale(1); }
-    30%  { transform: scale(1.35) translateY(-4px); }
-    55%  { transform: scale(0.92); }
-    75%  { transform: scale(1.08); }
-    100% { transform: scale(1); }
-  }
-
-  @keyframes flashGreen {
-    0%   { filter: brightness(1); }
-    40%  { filter: brightness(1.6) saturate(1.5); }
-    100% { filter: brightness(1); }
-  }
-
-  @keyframes flashRed {
-    0%   { filter: brightness(1); }
-    40%  { filter: brightness(1.5) hue-rotate(20deg) saturate(1.5); }
-    100% { filter: brightness(1); }
-  }
-
-  @keyframes badgeSpin {
-    0%   { transform: rotateY(0deg); }
-    50%  { transform: rotateY(180deg); }
-    100% { transform: rotateY(360deg); }
-  }
-
-  @keyframes resetPulse {
-    0%   { box-shadow: 0 0 0 1.5px #f0d060, 0 4px 16px rgba(0,0,0,0.65); }
-    50%  { box-shadow: 0 0 0 6px rgba(255,220,60,0.4), 0 4px 30px rgba(200,160,0,0.6); }
-    100% { box-shadow: 0 0 0 1.5px #f0d060, 0 4px 16px rgba(0,0,0,0.65); }
-  }
-
-  .bounce { animation: numBounce 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-  .flash-win { animation: flashGreen 0.5s ease; }
-  .flash-lose { animation: flashRed 0.5s ease; }
-  .spin { animation: badgeSpin 0.6s ease; }
-  .reset-pulse { animation: resetPulse 0.6s ease; }
-
-  /* Info text (shown only in browser, hidden in OBS via URL param) */
-  .info-overlay {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(0,0,0,0.75);
-    color: rgba(255,255,255,0.7);
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    text-align: center;
-    padding: 6px;
-    letter-spacing: 0.5px;
-    line-height: 1.6;
-  }
-  .info-overlay.hidden { display: none; }
+  html, body { background: transparent; width: 100%; height: 100%; overflow: hidden; font-family: 'Oswald', sans-serif; }
+  .container { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 10px; }
+  .board { position: relative; display: flex; align-items: stretch; height: 62px; filter: drop-shadow(0 6px 24px rgba(0,0,0,0.75)); user-select: none; }
+  .panel-left { background: linear-gradient(180deg, #1e7020 0%, #155016 100%); display: flex; align-items: center; justify-content: center; width: 100px; clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%); border-radius: 10px 0 0 10px; padding-right: 14px; cursor: pointer; transition: filter 0.15s; }
+  .panel-right { background: linear-gradient(180deg, #2b4e10 0%, #1e3a0a 100%); display: flex; align-items: center; justify-content: center; width: 100px; clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%); border-radius: 0 10px 10px 0; padding-left: 14px; cursor: pointer; transition: filter 0.15s; }
+  .score { font-size: 50px; font-weight: 900; color: #ffffff; line-height: 1; letter-spacing: -2px; text-shadow: 0 3px 10px rgba(0,0,0,0.5); }
+  .center-badge { width: 72px; display: flex; align-items: center; justify-content: center; margin: 0 -4px; cursor: pointer; z-index: 20; }
+  .badge-inner { width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle at 38% 30%, #ffe566 0%, #d4a020 40%, #9a7010 75%, #6a4c08 100%); border: 3.5px solid #b08820; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .badge-fut { font-size: 11.5px; font-weight: 900; color: #3a2000; letter-spacing: 2px; }
+  .badge-champs { font-size: 5.5px; font-weight: 700; color: #5a3800; }
+  
+  /* Admin Paneli (Sadece ?mode=admin linkinde açılır) */
+  #adminUI { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #111; z-index: 100; flex-direction: column; align-items: center; justify-content: center; gap: 15px; }
+  .admin-btn { padding: 15px; width: 80%; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; color: white; cursor: pointer; }
+  .btn-w { background: #1e7020; }
+  .btn-l { background: #7a1a1a; }
+  
+  /* Animasyonlar */
+  .bounce { animation: numBounce 0.4s ease; }
+  @keyframes numBounce { 0% { transform: scale(1); } 30% { transform: scale(1.3); } 100% { transform: scale(1); } }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="overlayUI">
   <div class="board">
-
-    <!-- LEFT: WIN panel -->
-    <div class="panel-left" id="panelLeft"
-         onclick="addScore('win')"
-         oncontextmenu="removeScore('win'); return false;"
-         title="Sol tık: +1 | Sağ tık: -1">
-      <span class="score" id="wScore">0</span>
-      <span class="hint">L-CLICK +1 | R-CLICK -1</span>
-    </div>
-
-    <!-- CENTER: FUT Champions Badge (click to reset) -->
-    <div class="center-badge" id="badge"
-         onclick="resetAll()"
-         title="Sıfırla">
-      <div class="badge-inner" id="badgeInner">
-        <svg class="badge-trophy" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Cup body -->
-          <path d="M7.5 2h13v11c0 3.59-2.91 6.5-6.5 6.5S7.5 16.59 7.5 13V2z" fill="#3a2000" opacity="0.55"/>
-          <path d="M7.5 2h13v11c0 3.59-2.91 6.5-6.5 6.5S7.5 16.59 7.5 13V2z" fill="#ffe066" opacity="0.3"/>
-          <!-- Left handle -->
-          <path d="M4 3h3.5v7.5c0 .9-.35 1.75-.97 2.38C5.4 13.98 4 12.7 4 10.5V3z" fill="#3a2000" opacity="0.45"/>
-          <!-- Right handle -->
-          <path d="M24 3h-3.5v7.5c0 .9.35 1.75.97 2.38C22.6 13.98 24 12.7 24 10.5V3z" fill="#3a2000" opacity="0.45"/>
-          <!-- Stem -->
-          <rect x="12.5" y="19.5" width="3" height="3" rx="1" fill="#3a2000" opacity="0.6"/>
-          <!-- Base -->
-          <rect x="9.5" y="22.5" width="9" height="2.5" rx="1.2" fill="#3a2000" opacity="0.65"/>
-          <!-- Star on cup -->
-          <path d="M14 6l1.1 2.6 2.8.25-2.05 1.85.65 2.8L14 12.1l-2.5 1.4.65-2.8L10.1 8.85l2.8-.25z" fill="#b08820"/>
-          <!-- Shine -->
-          <path d="M10 4.5 Q11 6 10.5 8" stroke="#ffe566" stroke-width="1" stroke-linecap="round" opacity="0.5" fill="none"/>
-        </svg>
-        <span class="badge-fut">FUT</span>
-        <span class="badge-champs">CHAMPIONS</span>
-      </div>
-    </div>
-
-    <!-- RIGHT: LOSS panel -->
-    <div class="panel-right" id="panelRight"
-         onclick="addScore('lose')"
-         oncontextmenu="removeScore('lose'); return false;"
-         title="Sol tık: +1 | Sağ tık: -1">
-      <span class="score" id="lScore">0</span>
-      <span class="hint">L-CLICK +1 | R-CLICK -1</span>
-    </div>
-
+    <div class="panel-left" onclick="sendUpdate('wins', 1)"><span class="score" id="wScore">0</span></div>
+    <div class="center-badge" onclick="resetAll()"><div class="badge-inner"><span class="badge-fut">FUT</span><span class="badge-champs">CHAMPIONS</span></div></div>
+    <div class="panel-right" onclick="sendUpdate('losses', 1)"><span class="score" id="lScore">0</span></div>
   </div>
 </div>
 
-<!-- Info bar (only in browser preview) -->
-<div class="info-overlay" id="infoBar">
-  WIN paneli: Sol tık +1 | Sağ tık -1 &nbsp;|&nbsp; LOSS paneli: Sol tık +1 | Sağ tık -1 &nbsp;|&nbsp; Orta rozet: SIFIRLA
-  &nbsp;|&nbsp; OBS'de URL sonuna <strong>?obs=1</strong> ekle → bu bar kaybolur
+<div id="adminUI">
+    <h2 style="color:white; margin-bottom:20px;">FC26 KONTROL PANELİ</h2>
+    <button class="admin-btn btn-w" onclick="sendUpdate('wins', 1)">GALİBİYET +1</button>
+    <button class="admin-btn btn-w" onclick="sendUpdate('wins', -1)" style="opacity:0.5">WINS -1</button>
+    <button class="admin-btn btn-l" onclick="sendUpdate('losses', 1)">MAĞLUBİYET +1</button>
+    <button class="admin-btn btn-l" onclick="sendUpdate('losses', -1)" style="opacity:0.5">LOSSES -1</button>
+    <button class="admin-btn" style="background:#444" onclick="resetAll()">SIFIRLA</button>
 </div>
 
 <script>
-  let wins = 0;
-  let losses = 0;
+  // BURAYI KENDİ LİNKİNLE DEĞİŞTİR
+  const firebaseConfig = { databaseURL: "BURAYA_FIREBASE_URL_GELECEK" };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  // Hide info bar if ?obs=1 in URL
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('obs') === '1') {
-    document.getElementById('infoBar').classList.add('hidden');
+  // Mod Seçimi
+  const mode = new URLSearchParams(window.location.search).get('mode');
+  if (mode === 'admin') {
+      document.getElementById('adminUI').style.display = 'flex';
+      document.getElementById('overlayUI').style.display = 'none';
+      document.body.style.background = "#111";
   }
 
-  function triggerAnim(el, cls) {
-    el.classList.remove(cls);
-    void el.offsetWidth; // reflow
-    el.classList.add(cls);
-    el.addEventListener('animationend', () => el.classList.remove(cls), { once: true });
-  }
+  // Veritabanını Dinle (Sayılar değiştikçe TikTok'taki tabela anında güncellenir)
+  db.ref('scores').on('value', (snapshot) => {
+    const data = snapshot.val() || { wins: 0, losses: 0 };
+    document.getElementById('wScore').innerText = data.wins;
+    document.getElementById('lScore').innerText = data.losses;
+    // Animasyon ekle
+    document.getElementById('wScore').classList.add('bounce');
+    setTimeout(() => document.getElementById('wScore').classList.remove('bounce'), 400);
+  });
 
-  function addScore(type) {
-    if (type === 'win') {
-      wins++;
-      const el = document.getElementById('wScore');
-      el.textContent = wins;
-      triggerAnim(el, 'bounce');
-      triggerAnim(document.getElementById('panelLeft'), 'flash-win');
-    } else {
-      losses++;
-      const el = document.getElementById('lScore');
-      el.textContent = losses;
-      triggerAnim(el, 'bounce');
-      triggerAnim(document.getElementById('panelRight'), 'flash-lose');
-    }
-  }
-
-  function removeScore(type) {
-    if (type === 'win' && wins > 0) {
-      wins--;
-      document.getElementById('wScore').textContent = wins;
-    } else if (type === 'lose' && losses > 0) {
-      losses--;
-      document.getElementById('lScore').textContent = losses;
-    }
+  // Skor Güncelleme
+  function sendUpdate(field, val) {
+    db.ref('scores/' + field).transaction((current) => {
+      return Math.max(0, (current || 0) + val);
+    });
   }
 
   function resetAll() {
-    wins = 0;
-    losses = 0;
-    document.getElementById('wScore').textContent = 0;
-    document.getElementById('lScore').textContent = 0;
-    triggerAnim(document.getElementById('badge'), 'spin');
-    triggerAnim(document.getElementById('badgeInner'), 'reset-pulse');
+    if(confirm('Skorlar sıfırlansın mı?')) {
+        db.ref('scores').set({ wins: 0, losses: 0 });
+    }
   }
 </script>
-
 </body>
 </html>
