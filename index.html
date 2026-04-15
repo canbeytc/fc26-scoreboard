@@ -2,148 +2,113 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FC26 Scoreboard - UT Champs Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <title>FC26 Ultra Gold Scoreboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         /* TEMEL AYARLAR */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: transparent; font-family: 'Bebas Neue', cursive; overflow: hidden; color: white; text-transform: uppercase; }
+        body { background: transparent; font-family: 'Anton', sans-serif; overflow: hidden; color: white; }
 
         #overlayUI { display: flex; align-items: center; justify-content: center; height: 100vh; }
 
-        /* YENİ TASARIM: UT CHAMPS STİLİ */
+        /* ANA TABELA: Senin bg.png dosyanı buraya gömüyoruz */
         .board { 
-            display: flex; 
-            height: 70px; /* Biraz daha basık */
+            position: relative;
+            width: 700px; /* Görselin genişliğine göre ayarla */
+            height: 180px; /* Görselin yüksekliğine göre ayarla */
+            background: url('bg.png') no-repeat center center;
+            background-size: contain; /* Görseli kutuya sığdır */
+            display: flex;
             align-items: center;
-            background: rgba(0, 0, 0, 0.7); /* Şeffaf siyah arka plan */
-            border-radius: 10px; /* Köşeler yuvarlak */
-            padding: 5px 15px; /* İçerik için boşluk */
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
-            border: 2px solid #b38b4d; /* Altın rengi kenarlık */
+            justify-content: center;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+        }
+
+        /* Skorları hizalamak için görünmez kutular */
+        .score-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            padding: 0 90px; /* Sayıları tam kalkanın yanındaki boşluklara oturtmak için ayarla */
+            margin-top: 15px; /* Sayıları kalkanın altına hizalamak için */
         }
 
         .panel { 
-            display: flex; 
-            flex-direction: column;
-            align-items: center; 
-            justify-content: center; 
-            height: 100%;
-            width: 100px;
-        }
-
-        /* Sayıların Tipi ve Boyutu */
-        .score { 
-            font-size: 55px; /* Büyük sayı */
-            font-weight: normal; /* Bebas Neue zaten kalın */
-            line-height: 1;
-            color: white; /* Sayılar beyaz */
-        }
-
-        /* SOL PANEL: YEŞİL */
-        .p-left { 
-            border-right: 2px solid #b38b4d; /* Altın çizgisi */
-        }
-
-        /* SAĞ PANEL: KIRMIZI */
-        .p-right { 
-            border-left: 2px solid #b38b4d; /* Altın çizgisi */
-        }
-
-        /* ORTADAKİ ROZET KUTUSU */
-        .badge {
-            background: linear-gradient(180deg, #d32f2f 0%, #7f1d1d 100%); /* Canlı kırmızıdan koyuya */
-            width: 70px;
-            height: 90px; /* Panellerden daha yüksek durmalı */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            clip-path: polygon(50% 0%, 100% 20%, 100% 80%, 50% 100%, 0% 80%, 0% 20%); /* Rozet şekli */
-            margin: 0 10px; /* Panellerden ayırmak için */
-            z-index: 10;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            margin-top: -15px; /* Panellerden daha yüksek durur */
-            border: 2px solid #b38b4d; /* Altın rengi kenarlık */
-        }
-
-        /* Rozet Üstündeki Yazılar */
-        .ut-text { 
-            font-size: 28px; 
-            letter-spacing: 2px;
+            width: 120px;
             text-align: center;
-            line-height: 1.1;
-        }
-        .champs-text {
-            font-size: 8px;
-            letter-spacing: 1px;
-            opacity: 0.7;
         }
 
-        /* ADMIN UI AYNI KALIYOR */
-        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #111; color: white; gap: 15px; padding: 20px; }
-        .btn { width: 100%; max-width: 350px; padding: 25px; font-size: 24px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; text-transform: uppercase; }
+        /* SKOR SAYILARI (Orijinal Font) */
+        .score { 
+            font-size: 90px; /* Çok büyük sayılar */
+            line-height: 1;
+            text-shadow: 4px 4px 10px rgba(0,0,0,0.9);
+            color: #fff;
+        }
+
+        /* ADMIN PANELİ (Aynı Kalıyor) */
+        #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #0a0a0a; gap: 20px; padding: 20px; }
+        .btn { width: 100%; max-width: 400px; padding: 25px; font-size: 28px; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; color: white; text-transform: uppercase; }
         .btn-w { background: #1e7020; }
         .btn-l { background: #7a1a1a; }
-        .btn-s { background: #444; padding: 10px; font-size: 14px; margin-top: 10px; }
+        .btn-s { background: #333; font-size: 16px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <div id="overlayUI">
     <div class="board">
-        <div class="panel p-left"><span class="score" id="wScore">0</span></div>
-        <div class="badge">
-            <span class="ut-text">UT</span>
-            <span class="champs-text">CHAMPIONS</span>
+        <div class="score-wrapper">
+            <div class="panel">
+                <span class="score" id="wScore">0</span>
+            </div>
+            <div style="width: 150px;"></div>
+            <div class="panel">
+                <span class="score" id="lScore">0</span>
+            </div>
         </div>
-        <div class="panel p-right"><span class="score" id="lScore">0</span></div>
     </div>
 </div>
 
 <div id="adminUI">
-    <h1>FC26 KUMANDA</h1>
-    <button class="btn btn-w" onclick="update('wins', 1)">GALİBİYET +1</button>
-    <button class="btn btn-w" style="opacity:0.5; font-size:16px; padding:10px;" onclick="update('wins', -1)">WINS -1</button>
-    <button class="btn btn-l" onclick="update('losses', 1)">MAĞLUBİYET +1</button>
-    <button class="btn btn-l" style="opacity:0.5; font-size:16px; padding:10px;" onclick="update('losses', -1)">LOSSES -1</button>
+    <h1 style="color:#d4af37; margin-bottom:10px;">FC26 KUMANDA</h1>
+    <button class="btn btn-w" onclick="update('wins', 1)">WINS +1</button>
+    <button class="btn btn-l" onclick="update('losses', 1)">LOSS +1</button>
     <button class="btn btn-s" onclick="reset()">SIFIRLA</button>
 </div>
 
 <script>
-    // FİRBASE AYARIN (DEĞİŞTİRME)
+    // FİRBASE AYARLARI
     const firebaseConfig = { databaseURL: "https://adem-can-yirtici-default-rtdb.europe-west1.firebasedatabase.app/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
-    // DİKKAT: Senin database klasör ismin
     const DB_PATH = 'fc26_data'; 
 
-    const mode = new URLSearchParams(window.location.search).get('mode');
-    if (mode === 'admin') {
+    // MOD KONTROLÜ
+    if (new URLSearchParams(window.location.search).get('mode') === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
         document.getElementById('overlayUI').style.display = 'none';
-        document.body.style.background = "#111";
-        document.body.style.overflow = "auto";
+        document.body.style.background = "#0a0a0a";
     }
 
-    // VERİ DİNLEME
+    // VERİ DİNLEME (TABELAYI GÜNCELLE)
     db.ref(DB_PATH).on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wScore').innerText = d.wins;
         document.getElementById('lScore').innerText = d.losses;
     });
 
-    // VERİ GÜNCELLEME
+    // VERİ YAZMA (BUTONLAR)
     function update(f, v) {
         db.ref(DB_PATH + '/' + f).transaction(c => Math.max(0, (c || 0) + v));
     }
 
     function reset() {
-        if(confirm('Sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
+        if(confirm('Tüm skorlar sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
     }
 </script>
 </body>
