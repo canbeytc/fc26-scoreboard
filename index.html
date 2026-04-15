@@ -18,7 +18,6 @@
         .score { font-size: 45px; font-weight: 900; }
         .badge { width: 75px; height: 75px; border-radius: 50%; background: radial-gradient(circle, #ffe566, #9a7010); border: 4px solid #b08820; z-index: 10; margin: 0 -5px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #3a2000; font-weight: 900; font-size: 14px; }
         
-        /* ADMIN UI */
         #adminUI { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #111; color: white; gap: 15px; padding: 20px; }
         .btn { width: 100%; max-width: 350px; padding: 25px; font-size: 24px; font-weight: bold; border: none; border-radius: 12px; cursor: pointer; color: white; text-transform: uppercase; }
         .btn-w { background: #1e7020; }
@@ -50,6 +49,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // ÖNEMLİ: Ekran görüntündeki çalışan isimle eşitledik
+    const DB_PATH = 'fc26_data'; 
+
     const mode = new URLSearchParams(window.location.search).get('mode');
     if (mode === 'admin') {
         document.getElementById('adminUI').style.display = 'flex';
@@ -58,7 +60,7 @@
     }
 
     // VERİ DİNLEME
-    db.ref('live_scores').on('value', (s) => {
+    db.ref(DB_PATH).on('value', (s) => {
         const d = s.val() || { wins: 0, losses: 0 };
         document.getElementById('wScore').innerText = d.wins;
         document.getElementById('lScore').innerText = d.losses;
@@ -66,11 +68,11 @@
 
     // VERİ GÜNCELLEME
     function update(f, v) {
-        db.ref('live_scores/' + f).transaction(c => Math.max(0, (c || 0) + v));
+        db.ref(DB_PATH + '/' + f).transaction(c => Math.max(0, (c || 0) + v));
     }
 
     function reset() {
-        if(confirm('Sıfırlansın mı?')) db.ref('live_scores').set({ wins: 0, losses: 0 });
+        if(confirm('Sıfırlansın mı?')) db.ref(DB_PATH).set({ wins: 0, losses: 0 });
     }
 </script>
 </body>
