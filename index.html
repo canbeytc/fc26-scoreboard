@@ -38,15 +38,16 @@
             color: #FFD700;
             text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
             font-weight: 900;
-            cursor: pointer; /* Tıklanabilir olduğunu belli eder */
+            cursor: pointer;
             z-index: 20;
             user-select: none;
         }
 
+        /* SENİN KOORDİNATLARIN */
         #home-score { top: 130px; left: 127px; }
         #away-score { top: 130px; right: 108px; }
 
-        /* Admin modunda değilken tıklamaları kapatmak istersen bu kısım kalabilir */
+        /* Admin modunda değilken tıklamaları kapatır */
         body:not(.admin-mode) .score-num, 
         body:not(.admin-mode) #reset-zone { pointer-events: none; }
     </style>
@@ -92,7 +93,7 @@
             onValue(r, (s) => { 
                 let current = s.val() || 0;
                 let next = current + amount;
-                if(next < 0) next = 0; // Skor 0'ın altına düşmesin
+                if(next < 0) next = 0; 
                 set(r, next); 
             }, { onlyOnce: true });
         };
